@@ -1,2 +1,21 @@
 # cc-svelte-datatable
 A generic Svelte Datatable
+
+## Get started
+
+[Yarn](https://yarnpkg.com/) is recommended for package management.
+
+Install the dependencies...
+
+```bash
+yarn install
+```
+
+...then start [Rollup](https://rollupjs.org):
+
+```bash
+yarn run dev
+```
+
+Navigate to [localhost:5000](http://localhost:5000). You should see your app running. Edit a component file in `src`, save it, and reload the page to see your changes.
+Usually on save of source files the page should reload automatically.
