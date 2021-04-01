@@ -10,11 +10,11 @@
             <span class="focus"></span>
         </div>
         <span class="cc-pagination-text">
-            { page * itemsPerPage } - { page * itemsPerPage +itemsPerPage } of { totalItems } { itemText }
+            { (page - 1) * itemsPerPage } - { (page - 1) * itemsPerPage + itemsPerPage } of { totalItems } { itemText }
         </span>
     </div>
     <div class="cc-pagination-right">
-        {#if backButtonDisabled === true }
+        {#if !backButtonDisabled }
         <button class="reset nav" role="button" type="button"
             on:click|preventDefault="{reset}"></button>
         <button class="left nav" role="button" type="button"
@@ -33,6 +33,8 @@
     export let itemText = "items";
     export let pageSizes = [10,25,50];
 
+    let backButtonDisabled;
+
     const dispatch = createEventDispatcher();
 
     $: {
@@ -46,7 +48,7 @@
 
         dispatch("update", { itemsPerPage, page });
     }
-    $: backButtonDisabled =  (page === 1);
+    $: backButtonDisabled = (page === 1);
 
     function reset ( event ) {
         page = 1;
@@ -216,4 +218,3 @@
         height: 3rem;
     }
 </style>
-
