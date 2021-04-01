@@ -24,12 +24,12 @@
             to: { date:  "2021-03-30", time: "23:00"}
         }
     };
-    let limit = 25;
-    let offset = 0;
+    let itemsPerPage = 25;
+    let page = 1;
     let filter = { "list": [
         {"duration": {"from": 60, "to": 84600}}]};
     let sorting = { field: "start_time", order: "DESC" };
-    let paging = { limit: limit, offset: offset };
+    let paging = { itemsPerPage: itemsPerPage, page: page };
     let selected = [];
     let columns = ['jobId','userId','projectId','clusterId','startTime','duration','numNodes'];
     let activeColumns = ['jobId','userId','startTime','duration'];
@@ -48,27 +48,11 @@
 
     initClient({ url: 'http://localhost:8080/query' });
 
-    const jobsStats = operationStore(`
-    query($filter: JobFilterList!){
-       jobsStatistics(
-       filter: $filter
-       ) {
-           totalJobs
-           histNumNodes {
-              count
-              value
-          }
-        }
-     }
-     `,{filter});
-
-    query(jobsStats);
-
     const jobQuery = operationStore(`
     query($filter: JobFilterList!, $sorting: OrderByInput!, $paging: PageRequest! ){
        jobs(
        filter: $filter
-       orderBy: $sorting
+       order: $sorting
        page: $paging
        ) {
            items {
@@ -88,9 +72,9 @@
     query(jobQuery);
 
     function handlePaging( event ) {
-        limit = event.detail.limit;
-        offset = event.detail.offset;
-        $jobQuery.variables.paging = {limit: limit, offset: offset };
+        itemsPerPage = event.detail.itemsPerPage;
+        page = event.detail.page;
+        $jobQuery.variables.paging = {itemsPerPage: itemsPerPage, page: page };
     }
 
     function handleSorting( event ) {
@@ -291,7 +275,6 @@
         <input type="search" bind:value={filters["userId"]} on:change={buildFilter} class="form-control"  placeholder="Filter userId">
       </div>
     <div>
-        <Button outline color=info on:click={toggleStatistics}><Icon name="graph-up" /></Button>
         <Button outline on:click={toggleConfig}><Icon name="gear" /></Button>
     </div>
 </div>
@@ -340,8 +323,8 @@
     </Row>
 
     <Pagination
-        {offset}
-        {limit}
+        {page}
+        {itemsPerPage}
         itemText="Jobs"
         totalItems={$jobQuery.data.jobs.count}
         on:update={handlePaging}

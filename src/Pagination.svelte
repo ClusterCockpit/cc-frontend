@@ -10,7 +10,7 @@
             <span class="focus"></span>
         </div>
         <span class="cc-pagination-text">
-            { offset+1 } - { offset+itemsPerPage } of { totalItems } { itemText }
+            { page * itemsPerPage } - { page * itemsPerPage +itemsPerPage } of { totalItems } { itemText }
         </span>
     </div>
     <div class="cc-pagination-right">
@@ -28,7 +28,6 @@
 <script>
     import { createEventDispatcher } from "svelte";
     export let page = 1;
-    let offset = 0;
     export let itemsPerPage = 10;
     export let totalItems = 0;
     export let itemText = "items";
@@ -37,7 +36,7 @@
     const dispatch = createEventDispatcher();
 
     $: {
-        if (typeof offset !== "number") {
+        if (typeof page !== "number") {
             page = Number(page);
         }
 
@@ -52,8 +51,6 @@
     function reset ( event ) {
         page = 1;
     }
-
-    $: offset = page * itemsPerPage;
 </script>
 
 <style>

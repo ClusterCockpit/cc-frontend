@@ -4,6 +4,7 @@ A generic Svelte Datatable
 ## Get started
 
 [Yarn](https://yarnpkg.com/) is recommended for package management.
+Due to an issue with Yarn v2 you have to stick to Yarn v1.
 
 Install the dependencies...
 
