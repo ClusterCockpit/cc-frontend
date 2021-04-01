@@ -1,5 +1,10 @@
 # cc-svelte-datatable
-A generic Svelte Datatable
+A generic Svelte Datatable.
+
+Builds on:
+* [Svelte](https://svelte.dev/)
+* [SvelteStrap](https://sveltestrap.js.org/)
+* [Bootstrap 4](https://getbootstrap.com/docs/4.6/getting-started/introduction/)
 
 ## Get started
 
