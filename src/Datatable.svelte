@@ -1,6 +1,5 @@
 <script>
     import { initClient, operationStore, query } from '@urql/svelte';
-    import Chart from 'chart.js';
     import { Col, Row, FormGroup,
         Label,
         Table, Icon, Badge,

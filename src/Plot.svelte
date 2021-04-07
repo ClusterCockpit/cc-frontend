@@ -15,16 +15,12 @@
 
 <script>
     import { createEventDispatcher } from "svelte";
+    import uPlot from "uplot";
 
     export let width = 600;
     export let height = 400;
-
-    /* TODO: Only for testing! */
-    export let fetchData = async () => {
-        const req = await fetch('/test-data/data.json');
-        const json = await req.json();
-        return [ 'load_one', json['load_one'] ];
-    };
+    export let title;
+    export let fetchData;
 
     let plotWrapper;
     let uplot = null;
@@ -39,7 +35,7 @@
     }
 
     async function render() {
-        const [ title, rawdata ] = await fetchData();
+        const rawdata = await fetchData();
 
         const longestSeries = rawdata.series.reduce(
             (n, series) => Math.max(n, series.data.length), 0);
@@ -82,7 +78,6 @@
         };
 
         uplot = new uPlot(opts, data, plotWrapper);
-
     }
 
 </script>
