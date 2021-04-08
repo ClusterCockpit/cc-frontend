@@ -9,6 +9,7 @@
         ListGroup, ListGroupItem,
         Modal, ModalBody, ModalHeader, ModalFooter, Input } from 'sveltestrap';
     import Pagination from './Pagination.svelte';
+    import JobMetricPlots from './JobMetricPlots.svelte';
 
     let filters = {
         numNodes: {
@@ -37,6 +38,17 @@
         duration: {type: "numeric", direction: ["down","up"], order: ["DESC","ASC"], field: "duration", current: 2},
         numNodes: {type: "numeric", direction: ["down","up"], order: ["DESC","ASC"], field: "num_nodes", current: 2},
     };
+
+    let metrics = ['cpu_load', 'mem_used', 'flops_any', 'flops_dp', 'flops_sp', 'mem_bw', 'cpi', 'clock', 'rapl_power'];
+    let selectedMetrics = ['flops_any', 'mem_used', 'cpu_load', 'mem_bw', 'clock'];
+    let jobMetricPlotsComponents = [];
+    /* Do not "react" when jobMetricPlotsComponents changes */
+    let plotComponents = jobMetricPlotsComponents;
+    $: {
+        for (let component of plotComponents) {
+            component.selectedMetricsChanged(selectedMetrics);
+        }
+    }
 
     let date;
     let showFilters = false;
@@ -156,6 +168,16 @@
                         <input type="checkbox" bind:group={activeColumns} value={col} >
                     {/if}
                     {col}
+                </ListGroupItem>
+            {/each}
+            {#each metrics as metric}
+                <ListGroupItem>
+                    {#if selectedMetrics.includes(metric) }
+                        <input type="checkbox" bind:group={selectedMetrics} value={metric} checked>
+                    {:else }
+                        <input type="checkbox" bind:group={selectedMetrics} value={metric}>
+                    {/if}
+                    {metric}
                 </ListGroupItem>
             {/each}
         </ListGroup>
@@ -306,14 +328,23 @@
                                 {/if}
                             </th>
                         {/each}
+                        {#each selectedMetrics as metric}
+                            <th>
+                                {metric}
+                            </th>
+                        {/each}
                     </tr>
                 </thead>
                 <tbody>
-                    {#each $jobQuery.data.jobs.items as row}
+                    {#each $jobQuery.data.jobs.items as row, i}
                         <tr>
                             {#each activeColumns as col}
                                 <td>{row[col]}</td>
                             {/each}
+                            <JobMetricPlots
+                                bind:this={jobMetricPlotsComponents[i]}
+                                jobId={row["jobId"]}
+                                selectedMetrics={selectedMetrics} />
                         </tr>
                     {/each}
                 </tbody>

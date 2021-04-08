@@ -17,16 +17,16 @@
     import { createEventDispatcher } from "svelte";
     import uPlot from "uplot";
 
-    export let width = 600;
-    export let height = 400;
-    export let title;
+    export let width = 300;
+    export let height = 200;
+    export let title = null;
     export let fetchData;
 
     let plotWrapper;
     let uplot = null;
 
     let colorIndex = 0;
-    const colors = [ '#80ff00', '#00bfff', '#0000ff', '#ff00ff', 'ff0000', 'ff8000', 'ffff00' ];
+    const colors = [ '#00bfff', '#0000ff', '#ff00ff', '#ff0000', '#ff8000', '#ffff00', '#80ff00' ];
     function getColor() {
         const c = colors[colorIndex++];
         if (colorIndex >= colors.length)
@@ -53,7 +53,7 @@
             plotSeries.push({
                 label: series.node_id,
                 scale: rawdata.unit,
-                width: 1 / devicePixelRatio,
+                width: 1.5 / devicePixelRatio,
                 stroke: getColor()
             });
         }
@@ -74,14 +74,10 @@
                 x: { time: false }
             },
             cursor: { show: false },
-            legend: { show: true, live: false }
+            legend: { show: false, live: false }
         };
 
         uplot = new uPlot(opts, data, plotWrapper);
     }
 
 </script>
-
-<style>
-
-</style>
