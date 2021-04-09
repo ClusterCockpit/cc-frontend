@@ -53,21 +53,24 @@
             plotSeries.push({
                 label: series.node_id,
                 scale: rawdata.unit,
-                width: 1.5 / devicePixelRatio,
+                width: 1,
                 stroke: getColor()
             });
         }
 
         const opts = {
-            title,
+            title: null,
             width,
             height,
             series: plotSeries,
             axes: [
-                {},
+                { /* label: 'Time (s)' */ },
                 {
                     scale: rawdata.unit,
-                    grid: { show: true }
+                    grid: { show: true },
+                    label: `${title} (${rawdata.unit})`,
+                    labelSize: 15,
+                    labelFont: 'sans-serif'
                 }
             ],
             scales: {
