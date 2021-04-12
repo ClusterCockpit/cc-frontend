@@ -9,11 +9,11 @@
     const metrics = selectedMetrics.slice();
     let addedMetrics = [];
 
-    const jobDataQuery = operationStore(`
+    const rawQuery = `
         query($jobId: String!, $metrics: [String]!) {
-            jobAvailableMetricsById(
+            jobMetrics(
                 jobId: $jobId,
-                selectMetrics: $metrics
+                metrics: $metrics
             ) {
                 name,
                 metric {
@@ -24,7 +24,9 @@
                 }
             }
         }
-    `, { jobId, metrics });
+    `;
+
+    const jobDataQuery = operationStore(rawQuery, { jobId, metrics });
 
     function sortQueryData(data) {
         const obj = data.reduce((obj, e) => {
@@ -64,32 +66,17 @@
             .map(metric => {
                 const client = getClient();
 
-                client.query(`
-                    query($jobId: String!, $metrics: [String]!) {
-                        jobAvailableMetricsById(
-                            jobId: $jobId,
-                            selectMetrics: $metrics
-                        ) {
-                            name,
-                            metric {
-                                unit,
-                                scope,
-                                timestep,
-                                series { node_id, data }
-                            }
-                        }
-                    }
-                `, {
+                client.query(rawQuery, {
                     jobId, metrics: [metric]
                 }).toPromise().then(res => {
-                    if (res.error || res.data.jobAvailableMetricsById.length != 1) {
+                    if (res.error || res.data.jobMetrics.length != 1) {
                         addedMetrics = [...addedMetrics, { name: metric, error: res.error }];
                         return;
                     }
 
                     addedMetrics = [...addedMetrics, {
                         name: metric,
-                        data: res.data.jobAvailableMetricsById[0].metric
+                        data: res.data.jobMetrics[0].metric
                     }];
                 });
             });
@@ -110,7 +97,7 @@
         <Card body color="danger" class="mb-3">Error: {$jobDataQuery.error.message}</Card>
     </td>
 {:else}
-    {#each sortQueryData($jobDataQuery.data.jobAvailableMetricsById) as metric}
+    {#each sortQueryData($jobDataQuery.data.jobMetrics) as metric}
         <td class="cc-plot-{jobId.replace('.', '_')}-{metric.name}">
             {#if metric.data}
                 <Plot title={metric.name} fetchData={() => Promise.resolve(metric.data)} />

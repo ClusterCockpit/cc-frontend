@@ -74,11 +74,12 @@
              startTime
              duration
              numNodes
+             hasProfile
            }
            count
          }
      }
-`, {filter, sorting, paging});
+     `, {filter, sorting, paging});
 
     query(jobQuery);
 
@@ -141,7 +142,7 @@
 </script>
 
 <style>
-   .sort {
+    .sort {
         position: relative;
         border: none;
         margin: 0;
@@ -149,9 +150,10 @@
         background: 0 0;
         transition: all 70ms;
     }
-   .active {
-       background-color: #bbb;
-   }
+
+    .active {
+        background-color: #bbb;
+    }
 </style>
 
 <Modal isOpen={open} {toggleConfig}>
@@ -308,7 +310,7 @@
     <Card body color="danger" class="mb-3"><h2>Error: {$jobQuery.error.message}</h2></Card>
 {:else}
     <Row>
-        <Col>
+        <div class="col" style="overflow-x: auto;">
             <Table>
                 <thead class="thead-light">
                     <tr>
@@ -341,15 +343,21 @@
                             {#each activeColumns as col}
                                 <td>{row[col]}</td>
                             {/each}
-                            <JobMetricPlots
-                                bind:this={jobMetricPlotsComponents[i]}
-                                jobId={row["jobId"]}
-                                selectedMetrics={selectedMetrics} />
+                            {#if row["hasProfile"]}
+                                <JobMetricPlots
+                                    bind:this={jobMetricPlotsComponents[i]}
+                                    jobId={row["jobId"]}
+                                    selectedMetrics={selectedMetrics} />
+                            {:else}
+                                <td colspan="{selectedMetrics.length}">
+                                    <Card body color="warning">No Profiling Data</Card>
+                                </td>
+                            {/if}
                         </tr>
                     {/each}
                 </tbody>
             </Table>
-        </Col>
+        </div>
     </Row>
 
     <Pagination

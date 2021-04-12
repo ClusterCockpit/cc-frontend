@@ -67,6 +67,5 @@ button:focus {
 }
 
 /* Bug in uPlot? */
-.uplot > .u-wrap > * {
-	position: absolute;
-}
+.uplot > .u-wrap { position: relative; }
+.uplot > .u-wrap > * { position: absolute; }
