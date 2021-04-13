@@ -21,7 +21,7 @@
     "@urql/svelte": "^1.2.0",
     "graphql": "^15.5.0",
     "sirv-cli": "^1.0.0",
-    "sveltestrap": "^3.13.0",
+    "sveltestrap": "5.0.0-beta.3",
     "uplot": "^1.6.7"
   }
 }
