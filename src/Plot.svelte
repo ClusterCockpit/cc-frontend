@@ -1,5 +1,4 @@
-<div class="cc-plot">
-
+<div bind:clientWidth={w} bind:clientHeight={h}  class="cc-plot">
     <div class="cc-plot-wrapper {uplot ? 'visible' : 'hidden'}" bind:this={plotWrapper}></div>
     {#await render()}
         <div class="spinner-border" role="status">
@@ -10,17 +9,22 @@
             {err.toString()}
         </div>
     {/await}
-
 </div>
+
+<style>
+    .cc-plot {
+        height: 200px;
+    }
+</style>
 
 <script>
     import { createEventDispatcher } from "svelte";
     import uPlot from "uplot";
 
-    export let width = 300;
-    export let height = 200;
     export let title = null;
     export let fetchData;
+    let w;
+    let h;
 
     let plotWrapper;
     let uplot = null;
@@ -60,8 +64,8 @@
 
         const opts = {
             title: null,
-            width,
-            height,
+            width: w,
+            height: h,
             series: plotSeries,
             axes: [
                 { /* label: 'Time (s)' */ },
@@ -69,7 +73,7 @@
                     scale: rawdata.unit,
                     grid: { show: true },
                     label: `${title} (${rawdata.unit})`,
-                    labelSize: 15,
+                    labelSize: 8,
                     labelFont: 'sans-serif'
                 }
             ],

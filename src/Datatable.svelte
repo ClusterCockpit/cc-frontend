@@ -32,7 +32,7 @@
     let paging = { itemsPerPage: itemsPerPage, page: page };
     let selected = [];
     let columns = ['jobId','userId','projectId','clusterId','startTime','duration','numNodes'];
-    let activeColumns = ['jobId','userId','startTime','duration'];
+    let activeColumns = ['jobId','numNodes','duration'];
     let sortedColumns = {
         startTime: {type: "numeric", direction: ["down","up"], order: ["DESC","ASC"], field: "start_time", current: 0},
         duration: {type: "numeric", direction: ["down","up"], order: ["DESC","ASC"], field: "duration", current: 2},
@@ -298,6 +298,7 @@
         <input type="search" bind:value={filters["userId"]} on:change={buildFilter} class="form-control"  placeholder="Filter userId">
       </div>
     <div>
+        <Button outline on:click={toggleConfig}><Icon name="sort-down" /></Button>
         <Button outline on:click={toggleConfig}><Icon name="gear" /></Button>
     </div>
 </div>

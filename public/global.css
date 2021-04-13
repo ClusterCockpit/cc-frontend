@@ -65,7 +65,3 @@ button:not(:disabled):active {
 button:focus {
 	border-color: #666;
 }
-
-/* Bug in uPlot? */
-/* .uplot > .u-wrap { position: relative; } */
-/* .uplot > .u-wrap > * { position: absolute; } */
