@@ -9,6 +9,7 @@
         ListGroup, ListGroupItem,
         Modal, ModalBody, ModalHeader, ModalFooter, Input } from 'sveltestrap';
     import Pagination from './Pagination.svelte';
+    import Filter from './FilterConfig.svelte';
     import JobMetricPlots from './JobMetricPlots.svelte';
 
     let filters = {
@@ -26,8 +27,9 @@
     };
     let itemsPerPage = 25;
     let page = 1;
-    let filter = { "list": [
-        {"duration": {"from": 60, "to": 84600}}]};
+    let filterItems = [];
+    let userFilter;
+    let filter = { "list": [{"duration": {"from": 60, "to": 84600}}]};
     let sorting = { field: "start_time", order: "DESC" };
     let paging = { itemsPerPage: itemsPerPage, page: page };
     let selected = [];
@@ -51,9 +53,9 @@
     }
 
     let date;
-    let showFilters = false;
     let showStats = false;
     let open = false;
+    let showFilters = false;
     const toggleConfig = () => (open = !open);
     const toggleFilter = () => (showFilters = !showFilters);
 
@@ -83,10 +85,20 @@
 
     query(jobQuery);
 
+    function handleFilter( event ) {
+        filterItems = event.detail.filterItems;
+        $jobQuery.variables.filter = { "list": filterItems};
+    }
+
     function handlePaging( event ) {
         itemsPerPage = event.detail.itemsPerPage;
         page = event.detail.page;
         $jobQuery.variables.paging = {itemsPerPage: itemsPerPage, page: page };
+    }
+
+    function handleUserFilter ( event ) {
+        filterItems.push({userId: {contains: userFilter }});
+        $jobQuery.variables.filter = { "list": filterItems};
     }
 
     function handleSorting( event ) {
@@ -116,29 +128,6 @@
         });
     }
 
-    function buildFilter( ) {
-        let filterItems = [];
-        const keys = Object.keys(filters);
-
-        keys.forEach((key, index) => {
-            switch(key) {
-                case "numNodes":
-                    filterItems.push({numNodes: {"from": filters["numNodes"]["from"], to:  filters["numNodes"]["to"]}});
-                    break;
-                case "startTime":
-                    break;
-                case "duration":
-                    var from = filters["duration"]["from"]["hours"] * 3600 + filters["duration"]["from"]["min"] * 60;
-                    var to = filters["duration"]["to"]["hours"] * 3600 + filters["duration"]["to"]["min"] * 60;
-                    filterItems.push({duration: {from: from , to: to }});
-                    break;
-                case "userId":
-                    filterItems.push({userId: {contains: filters["userId"] }});
-            }
-        });
-
-        $jobQuery.variables.filter = { "list": filterItems };
-    }
 </script>
 
 <style>
@@ -189,104 +178,7 @@
     </ModalFooter>
 </Modal>
 
-{#if showFilters}
-    <Row>
-        <Col>
-            <Row>
-                <Col>
-                    <h5>Start time</h5>
-                </Col>
-            </Row>
-            <p>From</p>
-            <Row>
-                <FormGroup class="col">
-                <Input type="date" name="date"  bind:value={filters["startTime"]["from"]["date"]}  placeholder="datetime placeholder" />
-                </FormGroup>
-                <FormGroup class="col">
-                    <Input type="time" name="date"  bind:value={filters["startTime"]["from"]["time"]}  placeholder="datetime placeholder" />
-                </FormGroup>
-            </Row>
-            <p>To</p>
-            <Row>
-                <FormGroup class="col">
-                <Input type="date" name="date"  bind:value={filters["startTime"]["to"]["date"]}  placeholder="datetime placeholder" />
-                </FormGroup>
-                <FormGroup class="col">
-                    <Input type="time" name="date"  bind:value={filters["startTime"]["to"]["time"]}  placeholder="datetime placeholder" />
-                </FormGroup>
-            </Row>
-        </Col>
-        <Col>
-            <Row>
-                <Col>
-                    <h5>Duration</h5>
-                </Col>
-            </Row>
-            <p>Between</p>
-            <Row>
-                <Col>
-                    <div class="input-group mb-2 mr-sm-2">
-                        <input type="number" class="form-control"  bind:value={filters["duration"]["from"]["hours"]} >
-                        <div class="input-group-append">
-                            <div class="input-group-text">h</div>
-                        </div>
-                    </div>
-                </Col>
-                <Col>
-                    <div class="input-group mb-2 mr-sm-2">
-                        <input type="number" class="form-control" bind:value={filters["duration"]["from"]["min"]} >
-                        <div class="input-group-append">
-                            <div class="input-group-text">m</div>
-                        </div>
-                    </div>
-                </Col>
-                <p>and</p>
-                <Col>
-                    <div class="input-group mb-2 mr-sm-2">
-                        <input type="number" class="form-control" bind:value={filters["duration"]["to"]["hours"]}  >
-                        <div class="input-group-append">
-                            <div class="input-group-text">h</div>
-                        </div>
-                    </div>
-                </Col>
-                <Col>
-                    <div class="input-group mb-2 mr-sm-2">
-                        <input type="number" class="form-control" bind:value={filters["duration"]["to"]["min"]}  >
-                        <div class="input-group-append">
-                            <div class="input-group-text">m</div>
-                        </div>
-                    </div>
-                </Col>
-            </Row>
-            <Row>
-                <Col>
-                    <h5>Number of nodes</h5>
-                </Col>
-            </Row>
-            <p>Between</p>
-            <Row>
-                <FormGroup class="col">
-                    <Input type=number bind:value={filters["numNodes"]["from"]} min=1 max=64 />
-                    <Input type=range bind:value={filters["numNodes"]["from"]} min=1 max=64 />
-                </FormGroup>
-                <p>and</p>
-                <FormGroup class="col">
-                    <Input type=number bind:value={filters["numNodes"]["to"]} min=1 max=64 />
-                    <Input type=range bind:value={filters["numNodes"]["to"]} min=1 max=64 />
-                </FormGroup>
-            </Row>
-        </Col>
-    </Row>
-    <div class="d-flex flex-row justify-content-center">
-        <div class="p-2">
-            <Button color=secondary on:click={() => { $jobQuery.variables.filter=filter; }} >Reset</Button>
-        </div>
-        <div class="p-2">
-            <Button color=primary on:click={buildFilter} >Apply</Button>
-        </div>
-    </div>
-{/if}
-
+<Filter {showFilters} on:update={handleFilter} />
 <div class="d-flex flex-row justify-content-between">
     <div>
         <Button outline color=success  on:click={toggleFilter}><Icon name="filter" /></Button>
@@ -295,7 +187,7 @@
         <div class="input-group-prepend">
             <div class="input-group-text"><Icon name="search" /></div>
         </div>
-        <input type="search" bind:value={filters["userId"]} on:change={buildFilter} class="form-control"  placeholder="Filter userId">
+        <input type="search" bind:value={userFilter} on:change={handleUserFilter} class="form-control"  placeholder="Filter userId">
       </div>
     <div>
         <Button outline on:click={toggleConfig}><Icon name="sort-down" /></Button>
