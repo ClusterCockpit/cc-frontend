@@ -10,6 +10,7 @@
         Modal, ModalBody, ModalHeader, ModalFooter, Input } from 'sveltestrap';
     import Pagination from './Pagination.svelte';
     import Filter from './FilterConfig.svelte';
+    import JobMeta from './JobMeta.svelte';
     import JobMetricPlots from './JobMetricPlots.svelte';
 
     let filters = {
@@ -34,7 +35,7 @@
     let paging = { itemsPerPage: itemsPerPage, page: page };
     let selected = [];
     let columns = ['jobId','userId','projectId','clusterId','startTime','duration','numNodes'];
-    let activeColumns = ['jobId','numNodes','duration'];
+    let activeColumns = ['numNodes','duration'];
     let sortedColumns = {
         startTime: {type: "numeric", direction: ["down","up"], order: ["DESC","ASC"], field: "start_time", current: 0},
         duration: {type: "numeric", direction: ["down","up"], order: ["DESC","ASC"], field: "duration", current: 2},
@@ -207,6 +208,9 @@
             <Table>
                 <thead class="thead-light">
                     <tr>
+                            <th>
+                                Job Info
+                            </th>
                         {#each activeColumns as col}
                             <th>
                                 {col}
@@ -233,6 +237,9 @@
                 <tbody>
                     {#each $jobQuery.data.jobs.items as row, i}
                         <tr>
+                            <td>
+                                <JobMeta job={row} />
+                            </td>
                             {#each activeColumns as col}
                                 <td>{row[col]}</td>
                             {/each}
