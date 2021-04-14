@@ -4,7 +4,7 @@ A generic Svelte Datatable.
 Builds on:
 * [Svelte](https://svelte.dev/)
 * [SvelteStrap](https://sveltestrap.js.org/)
-* [Bootstrap 4](https://getbootstrap.com/docs/4.6/getting-started/introduction/)
+* [Bootstrap 5](https://getbootstrap.com/)
 
 ## Get started
 
