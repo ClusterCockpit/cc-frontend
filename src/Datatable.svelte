@@ -144,6 +144,11 @@
     .active {
         background-color: #bbb;
     }
+
+    .header{
+        position:sticky;
+        top: 0;
+    }
 </style>
 
 <Modal isOpen={open} {toggleConfig}>
@@ -206,13 +211,13 @@
     <Row>
         <div class="col" style="overflow-x: auto;">
             <Table>
-                <thead class="thead-light">
+                <thead class="header thead-light">
                     <tr>
-                            <th>
+                            <th class="header" scope="col">
                                 Job Info
                             </th>
                         {#each activeColumns as col}
-                            <th>
+                            <th class="header" scope="col">
                                 {col}
                                 {#if col in sortedColumns}
                                         {#if sortedColumns[col].current == 2}
@@ -228,7 +233,7 @@
                             </th>
                         {/each}
                         {#each selectedMetrics as metric}
-                            <th>
+                            <th class="header" scope="col">
                                 {metric}
                             </th>
                         {/each}
