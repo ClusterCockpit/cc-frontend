@@ -33,9 +33,6 @@
     let filter = { "list": [{"duration": {"from": 60, "to": 84600}}]};
     let sorting = { field: "start_time", order: "DESC" };
     let paging = { itemsPerPage: itemsPerPage, page: page };
-    let selected = [];
-    let columns = ['jobId','userId','projectId','clusterId','startTime','duration','numNodes'];
-    let activeColumns = [];
     let sortedColumns = {
         startTime: {type: "numeric", direction: ["down","up"], order: ["DESC","ASC"], field: "start_time", current: 0},
         duration: {type: "numeric", direction: ["down","up"], order: ["DESC","ASC"], field: "duration", current: 2},
@@ -47,9 +44,11 @@
 
     let date;
     let showStats = false;
-    let open = false;
+    let columnConfigOpen = false;
+    let sortConfigOpen = false;
     let showFilters = false;
-    const toggleConfig = () => (open = !open);
+    const toggleColumnConfig = () => (columnConfigOpen = !columnConfigOpen);
+    const toggleSortConfig = () => (sortConfigOpen = !sortConfigOpen);
     const toggleFilter = () => (showFilters = !showFilters);
 
     initClient({ url: 'http://localhost:8080/query' });
@@ -110,7 +109,6 @@
                     }
                 }
 
-                console.log(sortedColumns[key].current);
                 $jobQuery.variables.sorting = {
                     field: sortedColumns[key].field,
                     order: sortedColumns[key].order[sortedColumns[key].current]
@@ -125,7 +123,6 @@
 
 <style>
     .sort {
-        position: relative;
         border: none;
         margin: 0;
         padding: 0;
@@ -143,22 +140,12 @@
     }
 </style>
 
-<Modal isOpen={open} {toggleConfig}>
+<Modal isOpen={columnConfigOpen} toggle={toggleColumnConfig}>
     <ModalHeader>
         Configure columns
     </ModalHeader>
     <ModalBody>
         <ListGroup>
-            {#each columns as col, i }
-                <ListGroupItem>
-                    {#if activeColumns.includes(col) }
-                        <input type="checkbox" bind:group={activeColumns} value={col} checked>
-                    {:else }
-                        <input type="checkbox" bind:group={activeColumns} value={col} >
-                    {/if}
-                    {col}
-                </ListGroupItem>
-            {/each}
             {#each metrics as metric}
                 <ListGroupItem>
                     {#if selectedMetrics.includes(metric) }
@@ -172,7 +159,34 @@
         </ListGroup>
     </ModalBody>
     <ModalFooter>
-        <Button color="primary" on:click={toggleConfig}>Close</Button>
+        <Button color="primary" on:click={toggleColumnConfig}>Close</Button>
+    </ModalFooter>
+</Modal>
+
+<Modal isOpen={sortConfigOpen} toggle={toggleSortConfig}>
+    <ModalHeader>
+        Sort rows
+    </ModalHeader>
+    <ModalBody>
+        <ListGroup>
+            {#each Object.keys(sortedColumns) as col}
+                <ListGroupItem>
+                    {#if sortedColumns[col].current == 2}
+                        <button type="button" class="sort" id="{col}" on:click={handleSorting}>
+                             <Icon name="sort-{sortedColumns[col].type}-{sortedColumns[col].direction[0]}"/>
+                        </button>
+                    {:else}
+                        <button type="button" class="sort active" id="{col}" on:click={handleSorting}>
+                            <Icon name="sort-{sortedColumns[col].type}-{sortedColumns[col].direction[sortedColumns[col].current]}"/>
+                        </button>
+                    {/if}
+                    {sortedColumns[col].field}
+                </ListGroupItem>
+            {/each}
+        </ListGroup>
+    </ModalBody>
+    <ModalFooter>
+        <Button color="primary" on:click={toggleSortConfig}>Close</Button>
     </ModalFooter>
 </Modal>
 
@@ -188,8 +202,8 @@
         <input type="search" bind:value={userFilter} on:change={handleUserFilter} class="form-control"  placeholder="Filter userId">
       </div>
     <div>
-        <Button outline on:click={toggleConfig}><Icon name="sort-down" /></Button>
-        <Button outline on:click={toggleConfig}><Icon name="gear" /></Button>
+        <Button outline on:click={toggleSortConfig}><Icon name="sort-down" /></Button>
+        <Button outline on:click={toggleColumnConfig}><Icon name="gear" /></Button>
     </div>
 </div>
 
@@ -205,25 +219,9 @@
             <Table>
                 <thead class="header thead-light">
                     <tr>
-                            <th class="header" scope="col">
-                                Job Info
-                            </th>
-                        {#each activeColumns as col}
-                            <th class="header" scope="col">
-                                {col}
-                                {#if col in sortedColumns}
-                                        {#if sortedColumns[col].current == 2}
-                                     <button class="sort" id="{col}" on:click={handleSorting} role="button" type="button" >
-                                        <Icon name="sort-{sortedColumns[col].type}-{sortedColumns[col].direction[0]}"/>
-                                    </button>
-                                        {:else}
-                                     <button class="sort active" id="{col}" on:click={handleSorting} role="button" type="button" >
-                                        <Icon name="sort-{sortedColumns[col].type}-{sortedColumns[col].direction[sortedColumns[col].current]}"/>
-                                    </button>
-                                        {/if}
-                                {/if}
-                            </th>
-                        {/each}
+                        <th class="header" scope="col">
+                            Job Info
+                        </th>
                         {#each selectedMetrics as metric}
                             <th class="header" scope="col">
                                 {metric}
@@ -237,9 +235,6 @@
                             <td>
                                 <JobMeta job={row} />
                             </td>
-                            {#each activeColumns as col}
-                                <td>{row[col]}</td>
-                            {/each}
                             {#if row["hasProfile"]}
                                 <JobMetricPlots
                                     jobId={row["jobId"]}
