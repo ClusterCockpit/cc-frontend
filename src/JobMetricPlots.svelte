@@ -7,10 +7,6 @@
     export let width;
     export let selectedMetrics;
 
-    const metrics = selectedMetrics.slice();
-    let addedMetrics = [];
-    let nPlots = metrics.length;
-
     const rawQuery = `
         query($jobId: String!, $metrics: [String]!) {
             jobMetrics(
@@ -28,7 +24,10 @@
         }
     `;
 
-    const jobDataQuery = operationStore(rawQuery, { jobId, metrics });
+    const jobDataQuery = operationStore(rawQuery, {
+        jobId,
+        metrics: selectedMetrics
+    });
 
     function sortQueryData(data) {
         const obj = data.reduce((obj, e) => {
@@ -36,88 +35,73 @@
             return obj;
         }, {});
 
-        return metrics.map((name) => ({ name, data: obj[name] }));
+        return selectedMetrics.map((name) => ({ name, data: obj[name] }));
     }
 
-    /*
-     * Svelte would refetch and rerender every plot if
-     * we would directly assign to metrics and
-     * jobDataQuery.variables.metrics (even if
-     * we only remove something).
-     *
-     * Instead, we do this slightly more compilacted stuff
-     * so that we only fetch/render the plot that was added.
-     */
-    export function selectedMetricsChanged(newlySelectedMetrics) {
-        metrics
-            .filter(metric => !newlySelectedMetrics.includes(metric))
-            .map(metric => {
-                const selector = `.cc-plot-${jobId.replace('.', '_')}-${metric}`;
-                const td = document.querySelector(selector);
-                td.remove();
-                for (let i = 0; i < addedMetrics.length; i++) {
-                    if (addedMetrics[i].name == metric) {
-                        addedMetrics.splice(i, 1);
-                        break;
-                    }
-                }
-            });
+    let oldSelectedMetrics = selectedMetrics.slice();
+    let oldQueryData = null;
 
-        newlySelectedMetrics
-            .filter(metric => !metrics.includes(metric))
-            .map(metric => {
-                const client = getClient();
+    function prepareData(initialQueryData) {
+        /* The jobId changed:  */
+        if (oldSelectedMetrics == null) {
+            oldSelectedMetrics = selectedMetrics.slice();
+            return sortQueryData($jobDataQuery.data.jobMetrics);
+        }
 
-                client.query(rawQuery, {
-                    jobId, metrics: [metric]
-                }).toPromise().then(res => {
+        if (oldQueryData == null)
+            oldQueryData = initialQueryData;
+
+        let data = [...oldQueryData];
+
+        selectedMetrics
+            .filter(metric => !oldSelectedMetrics.includes(metric))
+            .map(metric => getClient()
+                .query(rawQuery, { jobId, metrics: [metric] })
+                .toPromise()
+                .then(res => {
+
                     if (res.error || res.data.jobMetrics.length != 1) {
-                        addedMetrics = [...addedMetrics, { name: metric, error: res.error }];
+                        data.push({ name: metric, error: res.error });
                         return;
                     }
 
-                    addedMetrics = [...addedMetrics, {
+                    data.push({
                         name: metric,
-                        data: res.data.jobMetrics[0].metric
-                    }];
-                });
-            });
+                        metric: res.data.jobMetrics[0].metric
+                    });
+                }));
 
-        metrics.splice(0, metrics.length);
-        metrics.push(...newlySelectedMetrics);
-        nPlots = metrics.length;
+        oldSelectedMetrics = selectedMetrics;
+        oldQueryData = data;
+        return sortQueryData(data);
     }
 
-    $: $jobDataQuery.variables.jobId = jobId;
-    $: selectedMetricsChanged(selectedMetrics);
+    function jobIdChanged() {
+        $jobDataQuery.variables.jobId = jobId
+        oldSelectedMetrics = null;
+        oldQueryData = null;
+    }
+
+    $: jobIdChanged(jobId);
 
     query(jobDataQuery);
 </script>
 
 {#if $jobDataQuery.fetching}
-    <td colspan="{metrics.length}">
+    <td colspan="{selectedMetrics.length}">
         <Spinner secondary />
     </td>
 {:else if $jobDataQuery.error}
-    <td colspan="{metrics.length}">
+    <td colspan="{selectedMetrics.length}">
         <Card body color="danger" class="mb-3">Error: {$jobDataQuery.error.message}</Card>
     </td>
 {:else}
-    {#each sortQueryData($jobDataQuery.data.jobMetrics) as metric}
+    {#each prepareData($jobDataQuery.data.jobMetrics, selectedMetrics) as metric}
         <td class="cc-plot-{jobId.replace('.', '_')}-{metric.name}">
             {#if metric.data}
-                <Plot data={metric.data} width={width / nPlots}/>
-            {:else}
-                <span class="badge badge-warning">Missing Data</span>
-            {/if}
-        </td>
-    {/each}
-    {#each addedMetrics as metric}
-        <td class="cc-plot-{jobId.replace('.', '_')}-{metric.name}">
-            {#if metric.data}
-                <Plot data={metric.data} width={width / nPlots}/>
+                <Plot data={metric.data} width={width / selectedMetrics.length}/>
             {:else if metric.error}
-                <span class="badge badge-danger">Error: {metric.error.message}</span>
+                <span class="badge badge-danger">{metric.error.message}</span>
             {:else}
                 <span class="badge badge-warning">Missing Data</span>
             {/if}
