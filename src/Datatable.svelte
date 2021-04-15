@@ -34,9 +34,13 @@
     let sorting = { field: "start_time", order: "DESC" };
     let paging = { itemsPerPage: itemsPerPage, page: page };
     let sortedColumns = {
-        startTime: {type: "numeric", direction: ["down","up"], order: ["DESC","ASC"], field: "start_time", current: 0},
-        duration: {type: "numeric", direction: ["down","up"], order: ["DESC","ASC"], field: "duration", current: 2},
-        numNodes: {type: "numeric", direction: ["down","up"], order: ["DESC","ASC"], field: "num_nodes", current: 2},
+        startTime:   {type: "numeric", direction: ["down","up"], order: ["DESC","ASC"], field: "start_time",    current: 0},
+        duration:    {type: "numeric", direction: ["down","up"], order: ["DESC","ASC"], field: "duration",      current: 2},
+        numNodes:    {type: "numeric", direction: ["down","up"], order: ["DESC","ASC"], field: "num_nodes",     current: 2},
+        memUsedMax:  {type: "numeric", direction: ["down","up"], order: ["DESC","ASC"], field: "mem_used_max",  current: 2},
+        flopsAnyAvg: {type: "numeric", direction: ["down","up"], order: ["DESC","ASC"], field: "flops_any_avg", current: 2},
+        memBwAvg:    {type: "numeric", direction: ["down","up"], order: ["DESC","ASC"], field: "mem_bw_avg",    current: 2},
+        netBwAvg:    {type: "numeric", direction: ["down","up"], order: ["DESC","ASC"], field: "net_bw_avg",    current: 2},
     };
 
     let metrics = ['cpu_load', 'mem_used', 'flops_any', 'flops_dp', 'flops_sp', 'mem_bw', 'cpi', 'clock', 'rapl_power'];

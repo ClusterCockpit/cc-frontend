@@ -101,9 +101,9 @@
             {#if metric.data}
                 <Plot data={metric.data} width={width / selectedMetrics.length}/>
             {:else if metric.error}
-                <span class="badge badge-danger">{metric.error.message}</span>
+                <Card body color="danger">{metric.error.message}</Card>
             {:else}
-                <span class="badge badge-warning">Missing Data</span>
+                <Card body color="warning">Missing Data</Card>
             {/if}
         </td>
     {/each}
