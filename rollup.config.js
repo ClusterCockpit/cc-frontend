@@ -71,9 +71,10 @@ export default {
 		// instead of npm run dev), minify
 		production && terser(),
 
-        replace({
-            "process.env.NODE_ENV": JSON.stringify("development"),
-        }),
+		replace({
+			"process.env.NODE_ENV": JSON.stringify("development"),
+			preventAssignment: true
+		}),
 	],
 	watch: {
 		clearScreen: false

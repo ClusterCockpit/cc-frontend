@@ -85,6 +85,9 @@
         metrics.push(...newlySelectedMetrics);
     }
 
+    $: $jobDataQuery.variables.jobId = jobId;
+    $: selectedMetricsChanged(selectedMetrics);
+
     query(jobDataQuery);
 </script>
 
@@ -100,7 +103,7 @@
     {#each sortQueryData($jobDataQuery.data.jobMetrics) as metric}
         <td class="cc-plot-{jobId.replace('.', '_')}-{metric.name}">
             {#if metric.data}
-                <Plot title={metric.name} fetchData={() => Promise.resolve(metric.data)} />
+                <Plot data={metric.data} />
             {:else}
                 <span class="badge badge-warning">Missing Data</span>
             {/if}
@@ -109,7 +112,7 @@
     {#each addedMetrics as metric}
         <td class="cc-plot-{jobId.replace('.', '_')}-{metric.name}">
             {#if metric.data}
-                <Plot title={metric.name} fetchData={() => Promise.resolve(metric.data)} />
+                <Plot data={metric.data} />
             {:else if metric.error}
                 <span class="badge badge-danger">Error: {metric.error.message}</span>
             {:else}

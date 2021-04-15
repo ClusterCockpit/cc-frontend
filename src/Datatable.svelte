@@ -35,7 +35,7 @@
     let paging = { itemsPerPage: itemsPerPage, page: page };
     let selected = [];
     let columns = ['jobId','userId','projectId','clusterId','startTime','duration','numNodes'];
-    let activeColumns = ['numNodes','duration'];
+    let activeColumns = [];
     let sortedColumns = {
         startTime: {type: "numeric", direction: ["down","up"], order: ["DESC","ASC"], field: "start_time", current: 0},
         duration: {type: "numeric", direction: ["down","up"], order: ["DESC","ASC"], field: "duration", current: 2},
@@ -44,14 +44,6 @@
 
     let metrics = ['cpu_load', 'mem_used', 'flops_any', 'flops_dp', 'flops_sp', 'mem_bw', 'cpi', 'clock', 'rapl_power'];
     let selectedMetrics = ['flops_any', 'mem_used', 'cpu_load', 'mem_bw', 'clock'];
-    let jobMetricPlotsComponents = [];
-    /* Do not "react" when jobMetricPlotsComponents changes */
-    let plotComponents = jobMetricPlotsComponents;
-    $: {
-        for (let component of plotComponents) {
-            component.selectedMetricsChanged(selectedMetrics);
-        }
-    }
 
     let date;
     let showStats = false;
@@ -250,7 +242,6 @@
                             {/each}
                             {#if row["hasProfile"]}
                                 <JobMetricPlots
-                                    bind:this={jobMetricPlotsComponents[i]}
                                     jobId={row["jobId"]}
                                     selectedMetrics={selectedMetrics} />
                             {:else}
