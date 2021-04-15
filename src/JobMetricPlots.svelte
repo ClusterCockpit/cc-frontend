@@ -5,6 +5,7 @@
 
     export let jobId;
     export let width;
+    export let height;
     export let selectedMetrics;
 
     const rawQuery = `
@@ -31,13 +32,19 @@
 
     function sortQueryData(data) {
         const obj = data.reduce((obj, e) => {
-            obj[e['name']] = e['metric'];
+            obj[e['name']] = e;
             return obj;
         }, {});
 
-        return selectedMetrics.map((name) => ({ name, data: obj[name] }));
+        return selectedMetrics.map((name) => ({
+            name,
+            data: obj[name]?.metric,
+            loading: obj[name]?.loading,
+            error: obj[name]?.error
+        }));
     }
 
+    let triggerUpdate = 0;
     let oldSelectedMetrics = selectedMetrics.slice();
     let oldQueryData = null;
 
@@ -55,21 +62,35 @@
 
         selectedMetrics
             .filter(metric => !oldSelectedMetrics.includes(metric))
-            .map(metric => getClient()
-                .query(rawQuery, { jobId, metrics: [metric] })
-                .toPromise()
-                .then(res => {
+            .map(metric => {
+                getClient()
+                    .query(rawQuery, { jobId, metrics: [metric] })
+                    .toPromise()
+                    .then(res => {
+                        if (res.error || res.data.jobMetrics.length != 1) {
+                            oldQueryData.push({
+                                name: metric,
+                                error: res.error || "unexpected response"
+                            });
+                            triggerUpdate += 1;
+                            return;
+                        }
 
-                    if (res.error || res.data.jobMetrics.length != 1) {
-                        data.push({ name: metric, error: res.error });
-                        return;
-                    }
+                        oldQueryData
+                            .filter(e => e.name == metric)
+                            .forEach(e => {
+                                e.loading = false;
+                                e.metric = res.data.jobMetrics[0].metric;
+                            });
 
-                    data.push({
-                        name: metric,
-                        metric: res.data.jobMetrics[0].metric
+                        triggerUpdate += 1;
                     });
-                }));
+
+                data.push({
+                    name: metric,
+                    loading: true
+                });
+            });
 
         oldSelectedMetrics = selectedMetrics;
         oldQueryData = data;
@@ -96,12 +117,14 @@
         <Card body color="danger" class="mb-3">Error: {$jobDataQuery.error.message}</Card>
     </td>
 {:else}
-    {#each prepareData($jobDataQuery.data.jobMetrics, selectedMetrics) as metric}
+    {#each prepareData($jobDataQuery.data.jobMetrics, selectedMetrics, triggerUpdate) as metric}
         <td class="cc-plot-{jobId.replace('.', '_')}-{metric.name}">
             {#if metric.data}
-                <Plot data={metric.data} width={width / selectedMetrics.length}/>
+                <Plot data={metric.data} height={height} width={width / selectedMetrics.length}/>
             {:else if metric.error}
                 <Card body color="danger">{metric.error.message}</Card>
+            {:else if metric.loading}
+                <Spinner secondary />
             {:else}
                 <Card body color="warning">Missing Data</Card>
             {/if}

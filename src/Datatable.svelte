@@ -56,7 +56,8 @@
     const toggleFilter = () => (showFilters = !showFilters);
 
     let tableWidth;
-    let jobMetaWidth = 300;
+    let jobMetaWidth = 300;  // TODO: Read actuall width/height
+    let jobMetaHeight = 200;
 
     initClient({ url: 'http://localhost:8080/query' });
 
@@ -239,13 +240,14 @@
                 <tbody>
                     {#each $jobQuery.data.jobs.items as row, i}
                         <tr>
-                            <td style="width: {jobMetaWidth};">
+                            <td style="width: {jobMetaWidth}px; height: {jobMetaHeight}px;">
                                 <JobMeta job={row} />
                             </td>
                             {#if row["hasProfile"]}
                                 <JobMetricPlots
                                     jobId={row["jobId"]}
                                     width={tableWidth - jobMetaWidth - 50}
+                                    height={jobMetaHeight}
                                     selectedMetrics={selectedMetrics} />
                             {:else}
                                 <td colspan="{selectedMetrics.length}">

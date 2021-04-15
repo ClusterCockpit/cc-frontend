@@ -13,7 +13,7 @@
 
     export let data;
     export let width;
-    export const height = 230;
+    export let height;
 
     let plotWrapper;
     let uplot = null;
