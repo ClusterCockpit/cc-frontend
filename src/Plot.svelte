@@ -1,4 +1,4 @@
-<div bind:this={plotWrapper} bind:clientWidth={w} bind:clientHeight={h} class="cc-plot">
+<div bind:this={plotWrapper} class="cc-plot">
 </div>
 
 <style>
@@ -12,15 +12,19 @@
     import uPlot from "uplot";
 
     export let data;
-    let w;
-    let h;
+    export let width;
+    export const height = 230;
 
     let plotWrapper;
     let uplot = null;
-
+    let timeoutId = null;
+    const resizeSleepTime = 250;
     const colors = [ '#00bfff', '#0000ff', '#ff00ff', '#ff0000', '#ff8000', '#ffff00', '#80ff00' ];
 
-    function render(data) {
+    function render() {
+        if (!width || Number.isNaN(width) || width < 0)
+            return;
+
         const longestSeries = data.series.reduce(
             (n, series) => Math.max(n, series.data.length), 0);
 
@@ -45,8 +49,8 @@
 
         const opts = {
             title: null,
-            width: w,
-            height: h,
+            width,
+            height,
             series: plotSeries,
             axes: [
                 { /* label: 'Time (s)' */ },
@@ -72,20 +76,31 @@
 
     let mounted = false;
     onMount(() => {
-        render(data);
+        render();
         mounted = true;
     });
 
     onDestroy(() => {
         if (uplot)
             uplot.destroy();
+
+        if (timeoutId != null)
+            clearTimeout(timeoutId);
     });
 
-    function onDataChange(data) {
+    function onChange() {
         if (mounted)
-            render(data);
+            render();
     }
 
-    $: onDataChange(data);
+    function onWidthChange() {
+        if (timeoutId != null)
+            clearTimeout(timeoutId);
+
+        timeoutId = setTimeout(onChange, resizeSleepTime);
+    }
+
+    $: onChange(data);
+    $: onWidthChange(width);
 
 </script>

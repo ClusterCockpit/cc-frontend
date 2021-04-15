@@ -51,6 +51,9 @@
     const toggleSortConfig = () => (sortConfigOpen = !sortConfigOpen);
     const toggleFilter = () => (showFilters = !showFilters);
 
+    let tableWidth;
+    let jobMetaWidth = 300;
+
     initClient({ url: 'http://localhost:8080/query' });
 
     const jobQuery = operationStore(`
@@ -215,7 +218,7 @@
     <Card body color="danger" class="mb-3"><h2>Error: {$jobQuery.error.message}</h2></Card>
 {:else}
     <Row>
-        <div class="col" style="overflow-x: auto;">
+        <div class="col" style="overflow-x: auto;" bind:clientWidth={tableWidth}>
             <Table>
                 <thead class="header thead-light">
                     <tr>
@@ -232,12 +235,13 @@
                 <tbody>
                     {#each $jobQuery.data.jobs.items as row, i}
                         <tr>
-                            <td>
+                            <td style="width: {jobMetaWidth};">
                                 <JobMeta job={row} />
                             </td>
                             {#if row["hasProfile"]}
                                 <JobMetricPlots
                                     jobId={row["jobId"]}
+                                    width={tableWidth - jobMetaWidth - 50}
                                     selectedMetrics={selectedMetrics} />
                             {:else}
                                 <td colspan="{selectedMetrics.length}">

@@ -4,10 +4,12 @@
     import Plot from './Plot.svelte';
 
     export let jobId;
+    export let width;
     export let selectedMetrics;
 
     const metrics = selectedMetrics.slice();
     let addedMetrics = [];
+    let nPlots = metrics.length;
 
     const rawQuery = `
         query($jobId: String!, $metrics: [String]!) {
@@ -83,6 +85,7 @@
 
         metrics.splice(0, metrics.length);
         metrics.push(...newlySelectedMetrics);
+        nPlots = metrics.length;
     }
 
     $: $jobDataQuery.variables.jobId = jobId;
@@ -103,7 +106,7 @@
     {#each sortQueryData($jobDataQuery.data.jobMetrics) as metric}
         <td class="cc-plot-{jobId.replace('.', '_')}-{metric.name}">
             {#if metric.data}
-                <Plot data={metric.data} />
+                <Plot data={metric.data} width={width / nPlots}/>
             {:else}
                 <span class="badge badge-warning">Missing Data</span>
             {/if}
@@ -112,7 +115,7 @@
     {#each addedMetrics as metric}
         <td class="cc-plot-{jobId.replace('.', '_')}-{metric.name}">
             {#if metric.data}
-                <Plot data={metric.data} />
+                <Plot data={metric.data} width={width / nPlots}/>
             {:else if metric.error}
                 <span class="badge badge-danger">Error: {metric.error.message}</span>
             {:else}
