@@ -142,10 +142,20 @@
         background-color: #bbb;
     }
 
-    .header{
-        position:sticky;
-        top: 0;
+    .cc-table-wrapper {
+        overflow: initial;
     }
+
+    :global(.cc-table-wrapper > table) {
+        border-collapse: separate;
+    }
+
+    th.position-sticky.top-0 {
+        background-color: white;
+        z-index: 1000;
+        border-bottom: 1px solid black;
+    }
+
 </style>
 
 <Modal isOpen={columnConfigOpen} toggle={toggleColumnConfig}>
@@ -223,15 +233,15 @@
     <Card body color="danger" class="mb-3"><h2>Error: {$jobQuery.error.message}</h2></Card>
 {:else}
     <Row>
-        <div class="col" style="overflow-x: auto;" bind:clientWidth={tableWidth}>
+        <div class="col cc-table-wrapper" bind:clientWidth={tableWidth}>
             <Table>
-                <thead class="header thead-light">
+                <thead>
                     <tr>
-                        <th class="header" scope="col">
+                        <th class="position-sticky top-0" scope="col">
                             Job Info
                         </th>
                         {#each selectedMetrics as metric}
-                            <th class="header" scope="col">
+                            <th class="position-sticky top-0 text-center" scope="col">
                                 {metric}
                             </th>
                         {/each}
