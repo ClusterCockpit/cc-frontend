@@ -8,6 +8,7 @@
         Spinner,
         ListGroup, ListGroupItem,
         Modal, ModalBody, ModalHeader, ModalFooter, Input } from 'sveltestrap';
+    import { flip } from 'svelte/animate';
     import Pagination from './Pagination.svelte';
     import Filter from './FilterConfig.svelte';
     import JobMeta from './JobMeta.svelte';
@@ -133,6 +134,30 @@
         });
     }
 
+    let columnHovering;
+
+    function columnsDragStart(event, i) {
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.dropEffect = 'move';
+        event.dataTransfer.setData('text/plain', i);
+    }
+
+    function columnsDrag(event, target) {
+        event.dataTransfer.dropEffect = 'move';
+        const start = Number.parseInt(event.dataTransfer.getData("text/plain"));
+        const newMetrics = metrics;
+
+        if (start < target) {
+            newMetrics.splice(target + 1, 0, newMetrics[start]);
+            newMetrics.splice(start, 1);
+        } else {
+            newMetrics.splice(target, 0, newMetrics[start]);
+            newMetrics.splice(start + 1, 1);
+        }
+        metrics = newMetrics;
+        columnHovering = null;
+    }
+
 </script>
 
 <style>
@@ -162,6 +187,17 @@
         border-bottom: 1px solid black;
     }
 
+    li.cc-config-column {
+        display: block;
+        cursor: grab;
+    }
+
+    li.cc-config-column.is-active {
+        background-color: #3273dc;
+        color: #fff;
+        cursor: grabbing;
+    }
+
 </style>
 
 <Modal isOpen={columnConfigOpen} toggle={toggleColumnConfig}>
@@ -170,15 +206,21 @@
     </ModalHeader>
     <ModalBody>
         <ListGroup>
-            {#each metrics as metric}
-                <ListGroupItem>
+            {#each metrics as metric, index (metric)}
+                <li class="cc-config-column list-group-item"
+                    animate:flip draggable={true}
+                    on:dragstart={event => columnsDragStart(event, index)}
+                    on:drop|preventDefault={event => columnsDrag(event, index)}
+                    ondragover="return false"
+                    on:dragenter={() => columnHovering = index}
+                    class:is-active={columnHovering === index}>
                     {#if unorderedSelectedMetrics.includes(metric) }
                         <input type="checkbox" bind:group={unorderedSelectedMetrics} value={metric} checked>
                     {:else }
                         <input type="checkbox" bind:group={unorderedSelectedMetrics} value={metric}>
                     {/if}
                     {metric}
-                </ListGroupItem>
+                </li>
             {/each}
         </ListGroup>
     </ModalBody>
