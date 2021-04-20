@@ -43,8 +43,14 @@
         netBwAvg:    {type: "numeric", direction: ["down","up"], order: ["DESC","ASC"], field: "net_bw_avg",    current: 2},
     };
 
+    /* TODO: Fetch those from the backend */
     let metrics = ['cpu_load', 'mem_used', 'flops_any', 'flops_dp', 'flops_sp', 'mem_bw', 'cpi', 'clock', 'rapl_power'];
-    let selectedMetrics = ['flops_any', 'mem_used', 'cpu_load', 'mem_bw', 'clock'];
+    let unorderedSelectedMetrics = ['flops_any', 'cpu_load', 'mem_bw', 'mem_used'];
+
+    /* Svelte's bind:group does not care about order, so reorder here */
+    let selectedMetrics = [];
+    $: selectedMetrics = metrics.filter(metric =>
+        unorderedSelectedMetrics.includes(metric));
 
     let date;
     let showStats = false;
@@ -166,10 +172,10 @@
         <ListGroup>
             {#each metrics as metric}
                 <ListGroupItem>
-                    {#if selectedMetrics.includes(metric) }
-                        <input type="checkbox" bind:group={selectedMetrics} value={metric} checked>
+                    {#if unorderedSelectedMetrics.includes(metric) }
+                        <input type="checkbox" bind:group={unorderedSelectedMetrics} value={metric} checked>
                     {:else }
-                        <input type="checkbox" bind:group={selectedMetrics} value={metric}>
+                        <input type="checkbox" bind:group={unorderedSelectedMetrics} value={metric}>
                     {/if}
                     {metric}
                 </ListGroupItem>

@@ -25,6 +25,8 @@
         if (!width || Number.isNaN(width) || width < 0)
             return;
 
+        // console.log('rerender', { width, height });
+
         const longestSeries = data.series.reduce(
             (n, series) => Math.max(n, series.data.length), 0);
 
@@ -90,10 +92,13 @@
 
     function onChange() {
         if (mounted)
-            render();
+            setTimeout(render, 0);
     }
 
     function onWidthChange() {
+        if (!mounted)
+            return;
+
         if (timeoutId != null)
             clearTimeout(timeoutId);
 
