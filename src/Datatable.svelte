@@ -14,19 +14,6 @@
     import JobMeta from './JobMeta.svelte';
     import JobMetricPlots from './JobMetricPlots.svelte';
 
-    let filters = {
-        numNodes: {
-            from: 1, to: 64
-        },
-        duration: {
-            from: { hours: 0, min: 10 },
-            to: { hours: 24, min: 0 }
-        },
-        startTime: {
-            from: { date: "2014-01-01" , time: "12:00"},
-            to: { date:  "2021-03-30", time: "23:00"}
-        }
-    };
     let itemsPerPage = 25;
     let page = 1;
     let filterItems = [];
@@ -84,6 +71,7 @@
              duration
              numNodes
              hasProfile
+             tags { id, tagType, tagName }
            }
            count
          }

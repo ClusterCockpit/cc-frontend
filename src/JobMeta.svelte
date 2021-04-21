@@ -1,4 +1,6 @@
 <script>
+    import { getColorForTag } from './utils.js';
+
     export let job;
 
     function formatDuration(duration) {
@@ -18,3 +20,10 @@
 <p class="fw-bold">{job["startTime"]}</p>
 <div>Duration:</div>
 <p class="fw-bold">{formatDuration(job["duration"])}</p>
+<p>
+    {#each job["tags"] as tag}
+        <span class="badge rounded-pill {getColorForTag(tag)}">
+            {tag.tagType}: {tag.tagName}
+        </span>
+    {/each}
+</p>
