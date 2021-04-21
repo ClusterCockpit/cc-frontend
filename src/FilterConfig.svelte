@@ -1,6 +1,9 @@
 <script>
+    import { getColorForTag } from './utils.js';
     import { createEventDispatcher } from "svelte";
-    import { Col, Row, FormGroup, Button, Input } from 'sveltestrap';
+    import { Col, Row, FormGroup, Button, Input,
+             ListGroup, ListGroupItem, Card, Spinner } from 'sveltestrap';
+    import { operationStore, query } from '@urql/svelte';
 
     let filters = {
         numNodes: {
@@ -16,12 +19,31 @@
         }
     };
 
+    let selectedTag = { tagType: null, tagName: null };
+
+    let tagsQuery = operationStore(`
+        query {
+            tags {
+                tagName,
+                tagType
+            }
+        }
+    `);
+    query(tagsQuery);
+
     export let resetFilter = [{"duration": {"from": 60, "to": 84600}}];
     export let showFilters = false;
     const dispatch = createEventDispatcher();
 
     function handleReset( ) {
         dispatch("update", { resetFilter });
+    }
+
+    function handleTagSelection(tag) {
+        if (selectedTag.tagName == tag.tagName && selectedTag.tagType == tag.tagType)
+            selectedTag = { tagType: null, tagName: null };
+        else
+            selectedTag = tag;
     }
 
     function handleApply( ) {
@@ -42,9 +64,22 @@
             }
         });
 
+        if (selectedTag.tagName != null || selectedTag.tagType != null) {
+            filterItems.push({
+                tagName: selectedTag.tagName,
+                tagType: selectedTag.tagType
+            });
+        }
+
         dispatch("update", { filterItems });
     }
 </script>
+
+<style>
+    .cc-tag.badge.rounded-pill {
+        cursor: pointer;
+    }
+</style>
 
 {#if showFilters}
     <Row>
@@ -115,6 +150,8 @@
                     </div>
                 </Col>
             </Row>
+        </Col>
+        <Col>
             <Row>
                 <Col>
                     <h5>Number of nodes</h5>
@@ -133,14 +170,41 @@
                 </FormGroup>
             </Row>
         </Col>
+        <Col>
+            <Row>
+                <Col>
+                    <h5>Tags</h5>
+                </Col>
+            </Row>
+            <Row>
+                <Col>
+                    {#if $tagsQuery.fetching}
+                        <div class="d-flex justify-content-center">
+                            <Spinner secondary />
+                        </div>
+                    {:else if $tagsQuery.error}
+                        <Card body color="danger" class="mb-3"><h2>Error: {$tagsQuery.error.message}</h2></Card>
+                    {:else}
+                        <ListGroup>
+                            {#each $tagsQuery.data.tags as tag}
+                                <ListGroupItem class="{tag.tagType == selectedTag.tagType && tag.tagName == selectedTag.tagName ? 'active' : ''}">
+                                    <span class="cc-tag badge rounded-pill {getColorForTag(tag)}" on:click={_ => handleTagSelection(tag)}>
+                                        {tag.tagType}: {tag.tagName}
+                                    </span>
+                                </ListGroupItem>
+                            {/each}
+                        </ListGroup>
+                    {/if}
+                </Col>
+            </Row>
+        </Col>
     </Row>
     <div class="d-flex flex-row justify-content-center">
         <div class="p-2">
-            <Button color=secondary on:click={handleReset}  >Reset</Button>
+            <Button color=secondary on:click={handleReset}>Reset</Button>
         </div>
         <div class="p-2">
-            <Button color=primary on:click={handleApply} >Apply</Button>
+            <Button color=primary on:click={handleApply}>Apply</Button>
         </div>
     </div>
 {/if}
-
