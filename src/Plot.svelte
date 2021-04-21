@@ -11,6 +11,8 @@
     import { onMount, onDestroy } from "svelte";
     import uPlot from "uplot";
 
+    // console.log('new plot component');
+
     export let data;
     export let width;
     export let height;
@@ -21,11 +23,21 @@
     const resizeSleepTime = 250;
     const colors = [ '#00bfff', '#0000ff', '#ff00ff', '#ff0000', '#ff8000', '#ffff00', '#80ff00' ];
 
+    let prevWidth = null, prevHeight = null, prevData = null;
+
     function render() {
         if (!width || Number.isNaN(width) || width < 0)
             return;
 
-        // console.log('rerender', { width, height });
+        /* Prevent unnecessary rerenders */
+        if (prevWidth != null && Math.abs(prevWidth - width) < 10 && data == prevData)
+            return;
+
+        // console.log(`rerender: width: ${width}, height: ${height}`);
+
+        prevWidth = width;
+        prevHeight = height;
+        prevData = data;
 
         const longestSeries = data.series.reduce(
             (n, series) => Math.max(n, series.data.length), 0);

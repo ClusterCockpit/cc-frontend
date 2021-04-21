@@ -46,6 +46,10 @@
             selectedTag = tag;
     }
 
+    function toTime({ date, time }) {
+        return `${date}T${time}:00Z`; /* Expected: rfc3339 */
+    }
+
     function handleApply( ) {
         let filterItems = [];
         const keys = Object.keys(filters);
@@ -56,6 +60,10 @@
                     filterItems.push({numNodes: {"from": filters["numNodes"]["from"], to:  filters["numNodes"]["to"]}});
                     break;
                 case "startTime":
+                    filterItems.push({ startTime: {
+                        from: toTime(filters["startTime"]["from"]),
+                        to: toTime(filters["startTime"]["to"])
+                    } });
                     break;
                 case "duration":
                     var from = filters["duration"]["from"]["hours"] * 3600 + filters["duration"]["from"]["min"] * 60;
