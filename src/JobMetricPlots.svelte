@@ -4,6 +4,7 @@
     import Plot from './Plot.svelte';
 
     export let jobId;
+    export let clusterId;
     export let width;
     export let height;
     export let selectedMetrics;
@@ -19,7 +20,13 @@
                     unit,
                     scope,
                     timestep,
-                    series { node_id, data }
+                    series {
+                        node_id,
+                        statistics {
+                            avg, min, max
+                        },
+                        data
+                    }
                 }
             }
         }
@@ -117,10 +124,15 @@
         <Card body color="danger" class="mb-3">Error: {$jobDataQuery.error.message}</Card>
     </td>
 {:else}
-    {#each prepareData($jobDataQuery.data.jobMetrics, selectedMetrics, triggerUpdate) as metric}
+    {#each prepareData($jobDataQuery.data.jobMetrics, selectedMetrics, triggerUpdate) as metric (metric.name + "|" + clusterId)}
         <td class="cc-plot-{jobId.replace('.', '_')}-{metric.name}">
             {#if metric.data}
-                <Plot data={metric.data} height={height} width={width / selectedMetrics.length}/>
+                <Plot
+                    metric={metric.name}
+                    clusterId={clusterId}
+                    data={metric.data}
+                    height={height}
+                    width={width / selectedMetrics.length}/>
             {:else if metric.error}
                 <Card body color="danger">{metric.error.message}</Card>
             {:else if metric.loading}

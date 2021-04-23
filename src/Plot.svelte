@@ -4,24 +4,67 @@
 <style>
     .cc-plot {
         height: 200px;
+        border-radius: 5px;
     }
 </style>
 
+<script context="module">
+    /* TODO: Make all of this customizable... */
+    const resizeSleepTime = 250;
+    const lineWidth = 1 * window.devicePixelRatio;
+    const lineColors = [ '#00bfff', '#0000ff', '#ff00ff', '#ff0000', '#ff8000', '#ffff00', '#80ff00' ];
+    const backgroundColors = {
+        normal:  'rgba(255, 255, 255, 1.0)',
+        caution: 'rgba(255, 128,   0, 0.3)',
+        alert:   'rgba(255,   0,   0, 0.3)'
+    };
+
+    function getTotalAvg(data) {
+        let avg = 0;
+        for (let series of data.series)
+            avg += series.statistics.avg;
+
+        return avg / data.series.length;
+    }
+
+    function getBackgroundColor(data, metricConfig) {
+        if (!metricConfig || !metricConfig.alert || !metricConfig.caution)
+            return null;
+
+        let cond = metricConfig.alert < metricConfig.caution
+            ? (a, b) => a <= b
+            : (a, b) => a >= b;
+
+        let avg = getTotalAvg(data);
+        if (Number.isNaN(avg))
+            return null;
+
+        if (metricConfig.alert && cond(avg, metricConfig.alert))
+            return backgroundColors.alert;
+
+        if (metricConfig.caution && cond(avg, metricConfig.caution))
+            return backgroundColors.caution;
+
+        return null;
+    }
+
+</script>
+
 <script>
-    import { onMount, onDestroy } from "svelte";
+    import { onMount, onDestroy, getContext } from "svelte";
     import uPlot from "uplot";
 
-    // console.log('new plot component');
-
+    export let metric;
+    export let clusterId;
     export let data;
     export let width;
     export let height;
 
+    const metricConfig = getContext('metric-config')[clusterId][metric];
+
     let plotWrapper;
     let uplot = null;
     let timeoutId = null;
-    const resizeSleepTime = 250;
-    const colors = [ '#00bfff', '#0000ff', '#ff00ff', '#ff0000', '#ff8000', '#ffff00', '#80ff00' ];
 
     let prevWidth = null, prevHeight = null, prevData = null;
 
@@ -56,8 +99,8 @@
             plotSeries.push({
                 /* label: series.node_id, */
                 scale: data.unit,
-                width: 1,
-                stroke: colors[i % colors.length]
+                width: lineWidth,
+                stroke: lineColors[i % lineColors.length]
             });
         }
 
@@ -92,6 +135,10 @@
     onMount(() => {
         render();
         mounted = true;
+
+        let bg = getBackgroundColor(data, metricConfig);
+        if (bg != null)
+            plotWrapper.style.backgroundColor = bg;
     });
 
     onDestroy(() => {

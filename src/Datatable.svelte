@@ -9,6 +9,7 @@
         ListGroup, ListGroupItem,
         Modal, ModalBody, ModalHeader, ModalFooter, Input } from 'sveltestrap';
     import { flip } from 'svelte/animate';
+    import { setContext } from 'svelte';
     import Pagination from './Pagination.svelte';
     import Filter from './FilterConfig.svelte';
     import JobMeta from './JobMeta.svelte';
@@ -55,7 +56,9 @@
     initClient({ url: 'http://localhost:8080/query' });
 
     let metricUnits = null;
-    let metricConfig = {};
+    const metricConfig = {};
+    setContext('metric-config', metricConfig);
+
     getClient()
         .query(`query {
             clusters {
@@ -339,6 +342,7 @@
                             {#if row["hasProfile"]}
                                 <JobMetricPlots
                                     jobId={row["jobId"]}
+                                    clusterId={row["clusterId"]}
                                     width={tableWidth - jobMetaWidth - 50}
                                     height={jobMetaHeight}
                                     selectedMetrics={selectedMetrics} />
