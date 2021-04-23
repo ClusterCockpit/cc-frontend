@@ -29,7 +29,7 @@
 
     function getBackgroundColor(data, metricConfig) {
         if (!metricConfig || !metricConfig.alert || !metricConfig.caution)
-            return null;
+            return backgroundColors.normal;
 
         let cond = metricConfig.alert < metricConfig.caution
             ? (a, b) => a <= b
@@ -37,7 +37,7 @@
 
         let avg = getTotalAvg(data);
         if (Number.isNaN(avg))
-            return null;
+            return backgroundColors.normal;
 
         if (metricConfig.alert && cond(avg, metricConfig.alert))
             return backgroundColors.alert;
@@ -45,7 +45,7 @@
         if (metricConfig.caution && cond(avg, metricConfig.caution))
             return backgroundColors.caution;
 
-        return null;
+        return backgroundColors.normal;
     }
 
 </script>
@@ -75,6 +75,11 @@
         /* Prevent unnecessary rerenders */
         if (prevWidth != null && Math.abs(prevWidth - width) < 10 && data == prevData)
             return;
+
+        if (prevData != data) {
+            let bg = getBackgroundColor(data, metricConfig);
+            plotWrapper.style.backgroundColor = bg;
+        }
 
         // console.log(`rerender: width: ${width}, height: ${height}`);
 
@@ -135,10 +140,6 @@
     onMount(() => {
         render();
         mounted = true;
-
-        let bg = getBackgroundColor(data, metricConfig);
-        if (bg != null)
-            plotWrapper.style.backgroundColor = bg;
     });
 
     onDestroy(() => {
