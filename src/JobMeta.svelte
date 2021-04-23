@@ -13,7 +13,7 @@
     }
 </script>
 
-<div class="fw-bold">{job["jobId"]}</div>
+<div class="fw-bold">{job["jobId"]} ({job["clusterId"]})</div>
 <div class="fst-italic">{job["userId"]}</div>
 <p>{job["numNodes"]} nodes</p>
 <div>Started at:</div>

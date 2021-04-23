@@ -1,5 +1,5 @@
 <script>
-    import { initClient, operationStore, query } from '@urql/svelte';
+    import { initClient, operationStore, query, getClient } from '@urql/svelte';
     import { Col, Row, FormGroup,
         Label,
         Table, Icon, Badge,
@@ -31,9 +31,8 @@
         netBwAvg:    {type: "numeric", direction: ["down","up"], order: ["DESC","ASC"], field: "net_bw_avg",    current: 2},
     };
 
-    /* TODO: Fetch those from the backend */
-    let metrics = ['cpu_load', 'mem_used', 'flops_any', 'flops_dp', 'flops_sp', 'mem_bw', 'cpi', 'clock', 'rapl_power'];
-    let unorderedSelectedMetrics = ['flops_any', 'cpu_load', 'mem_bw', 'mem_used'];
+    let metrics = [];
+    let unorderedSelectedMetrics = [];
 
     /* Svelte's bind:group does not care about order, so reorder here */
     let selectedMetrics = [];
@@ -50,10 +49,55 @@
     const toggleFilter = () => (showFilters = !showFilters);
 
     let tableWidth;
-    let jobMetaWidth = 300;  // TODO: Read actuall width/height
+    let jobMetaWidth = 175; // TODO: Read actuall width/height
     let jobMetaHeight = 200;
 
     initClient({ url: 'http://localhost:8080/query' });
+
+    let metricUnits = null;
+    let metricConfig = {};
+    getClient()
+        .query(`query {
+            clusters {
+                clusterID,
+                metricConfig {
+                    name
+                    unit
+                    peak
+                    normal
+                    caution
+                    alert
+                }
+            }
+        }`)
+        .toPromise()
+        .then(res => {
+            if (res.error) {
+                console.error(res.error);
+                return;
+            }
+
+            metrics = [];
+            metricUnits = {};
+            for (let cluster of res.data.clusters) {
+                metricConfig[cluster.clusterID] = {};
+                for (let config of cluster.metricConfig) {
+                    metricConfig[cluster.clusterID][config.name] = config;
+                    metrics.push(config.name);
+
+                    if (metricUnits[config.name] != null)
+                        /* TODO: Show proper warning? Show both units? */
+                        console.assert(metricUnits[config.name]);
+                    else
+                        metricUnits[config.name] = config.unit;
+                }
+            }
+
+            unorderedSelectedMetrics = metrics
+                .filter(m => res.data.clusters
+                    .every(c => metricConfig[c.clusterID][m] != null))
+                .slice(0, 4);
+        });
 
     const jobQuery = operationStore(`
     query($filter: JobFilterList!, $sorting: OrderByInput!, $paging: PageRequest! ){
@@ -279,6 +323,9 @@
                         {#each selectedMetrics as metric}
                             <th class="position-sticky top-0 text-center" scope="col">
                                 {metric}
+                                {#if metricUnits[metric]}
+                                    ({metricUnits[metric]})
+                                {/if}
                             </th>
                         {/each}
                     </tr>
