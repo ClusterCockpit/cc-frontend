@@ -3,7 +3,6 @@
 
 <style>
     .cc-plot {
-        height: 200px;
         border-radius: 5px;
     }
 </style>
@@ -11,7 +10,8 @@
 <script context="module">
     /* TODO: Make all of this customizable... */
     const resizeSleepTime = 250;
-    const lineWidth = 1 * window.devicePixelRatio;
+    const peakLineColor = '#000000';
+    const lineWidth = 1 / window.devicePixelRatio;
     const lineColors = [ '#00bfff', '#0000ff', '#ff00ff', '#ff0000', '#ff8000', '#ffff00', '#80ff00' ];
     const backgroundColors = {
         normal:  'rgba(255, 255, 255, 1.0)',
@@ -39,15 +39,33 @@
         if (Number.isNaN(avg))
             return backgroundColors.normal;
 
-        if (metricConfig.alert && cond(avg, metricConfig.alert))
+        if (cond(avg, metricConfig.alert))
             return backgroundColors.alert;
 
-        if (metricConfig.caution && cond(avg, metricConfig.caution))
+        if (cond(avg, metricConfig.caution))
             return backgroundColors.caution;
 
         return backgroundColors.normal;
     }
 
+    function formatTime(val) {
+        let h = Math.floor(val / 3600);
+        let m = Math.floor((val % 3600) / 60);
+        if (h == 0)
+            return `${m}m`;
+        else if (m == 0)
+            return `${h}h`
+        else
+            return `${h}:${m}h`;
+    }
+
+    function getTimeIncrs(timestep, maxX) {
+        let incrs = [];
+        for (let t = 60; t < maxX; t *= 10)
+            incrs.push(t, t * 2, t * 3, t * 5);
+
+        return incrs;
+    }
 </script>
 
 <script>
@@ -65,79 +83,95 @@
     let plotWrapper;
     let uplot = null;
     let timeoutId = null;
+    let prevWidth = null, prevHeight = null;
 
-    let prevWidth = null, prevHeight = null, prevData = null;
+    const longestSeries = data.series.reduce(
+        (n, series) => Math.max(n, series.data.length), 0);
+
+    const maxX = longestSeries * data.timestep;
+    const plotData = [new Array(longestSeries)];
+    const plotSeries = [{}];
+
+    for (let i = 0; i < longestSeries; i++)
+        plotData[0][i] = i * data.timestep;
+
+    for (let i = 0; i < data.series.length; i++) {
+        plotData.push(data.series[i].data);
+        plotSeries.push({
+            scale: 'y',
+            width: lineWidth,
+            stroke: lineColors[i % lineColors.length]
+        });
+    }
+
+    const opts = {
+        width,
+        height,
+        series: plotSeries,
+        axes: [
+            {
+                space: 35,
+                incrs: getTimeIncrs(data.timestep, maxX),
+                values: (u, vals) =>
+                    vals.map(v =>
+                        formatTime(v, maxX))
+            },
+            {
+                scale: 'y',
+                grid: { show: true },
+                labelFont: 'sans-serif'
+            }
+        ],
+        padding: [0, 10, -20, -10],
+        hooks: {},
+        scales: { x: { time: false }, y: {} },
+        cursor: { show: false },
+        legend: { show: false, live: false }
+    };
+
+    if (metricConfig && metricConfig.peak) {
+        opts.scales.y.range = [0., metricConfig.peak * 1.1];
+
+        opts.hooks.draw = [u => {
+            let x0 = u.valToPos(0, 'x', true);
+            let x1 = u.valToPos(maxX, 'x', true);
+            let y = u.valToPos(metricConfig.peak, 'y', true);
+
+            u.ctx.lineWidth = lineWidth;
+            u.ctx.strokeStyle = peakLineColor;
+            u.ctx.setLineDash([5, 5]);
+            u.ctx.beginPath();
+            u.ctx.moveTo(x0, y);
+            u.ctx.lineTo(x1, y);
+            u.ctx.stroke();
+        }];
+    }
 
     function render() {
         if (!width || Number.isNaN(width) || width < 0)
             return;
 
         /* Prevent unnecessary rerenders */
-        if (prevWidth != null && Math.abs(prevWidth - width) < 10 && data == prevData)
+        if (prevWidth != null && Math.abs(prevWidth - width) < 10)
             return;
-
-        if (prevData != data) {
-            let bg = getBackgroundColor(data, metricConfig);
-            plotWrapper.style.backgroundColor = bg;
-        }
-
-        // console.log(`rerender: width: ${width}, height: ${height}`);
 
         prevWidth = width;
         prevHeight = height;
-        prevData = data;
 
-        const longestSeries = data.series.reduce(
-            (n, series) => Math.max(n, series.data.length), 0);
-
-        const plotData = [ new Array(longestSeries) ];
-        const plotSeries = [ { label: "Time", width: 1 / devicePixelRatio, stroke: 'black' } ];
-
-        // Time-Axis/Data:
-        for (let i = 0; i < longestSeries; i++) {
-            plotData[0][i] = i * data.timestep;
+        if (!uplot) {
+            opts.width = width;
+            opts.height = height;
+            uplot = new uPlot(opts, plotData, plotWrapper);
+        } else {
+            uplot.setSize({ width, height });
         }
-
-        for (let i = 0; i < data.series.length; i++) {
-            const series = data.series[i];
-            plotData.push(series.data);
-            plotSeries.push({
-                /* label: series.node_id, */
-                scale: data.unit,
-                width: lineWidth,
-                stroke: lineColors[i % lineColors.length]
-            });
-        }
-
-        const opts = {
-            title: null,
-            width,
-            height,
-            series: plotSeries,
-            axes: [
-                { /* label: 'Time (s)' */ },
-                {
-                    scale: data.unit,
-                    grid: { show: true },
-                    /* label: `${title} (${data.unit})`, */
-                    labelFont: 'sans-serif'
-                }
-            ],
-            scales: {
-                x: { time: false }
-            },
-            cursor: { show: false },
-            legend: { show: false, live: false }
-        };
-
-        if (uplot)
-            uplot.destroy();
-
-        uplot = new uPlot(opts, plotData, plotWrapper);
     }
 
     let mounted = false;
     onMount(() => {
+        let bg = getBackgroundColor(data, metricConfig);
+        plotWrapper.style.backgroundColor = bg;
+
         render();
         mounted = true;
     });
@@ -150,22 +184,19 @@
             clearTimeout(timeoutId);
     });
 
-    function onChange() {
-        if (mounted)
-            setTimeout(render, 0);
-    }
-
-    function onWidthChange() {
+    function onSizeChange() {
         if (!mounted)
             return;
 
         if (timeoutId != null)
             clearTimeout(timeoutId);
 
-        timeoutId = setTimeout(onChange, resizeSleepTime);
+        timeoutId = setTimeout(() => {
+            timeoutId = null;
+            render();
+        }, resizeSleepTime);
     }
 
-    $: onChange(data);
-    $: onWidthChange(width);
+    $: onSizeChange(width, height);
 
 </script>

@@ -77,7 +77,7 @@
                         if (res.error || res.data.jobMetrics.length != 1) {
                             oldQueryData.push({
                                 name: metric,
-                                error: res.error || "unexpected response"
+                                error: res.error
                             });
                             triggerUpdate += 1;
                             return;
@@ -124,15 +124,17 @@
         <Card body color="danger" class="mb-3">Error: {$jobDataQuery.error.message}</Card>
     </td>
 {:else}
-    {#each prepareData($jobDataQuery.data.jobMetrics, selectedMetrics, triggerUpdate) as metric (metric.name + "|" + clusterId)}
+    {#each prepareData($jobDataQuery.data.jobMetrics, selectedMetrics, triggerUpdate) as metric (metric.name)}
         <td class="cc-plot-{jobId.replace('.', '_')}-{metric.name}">
             {#if metric.data}
-                <Plot
-                    metric={metric.name}
-                    clusterId={clusterId}
-                    data={metric.data}
-                    height={height}
-                    width={width / selectedMetrics.length}/>
+                {#key metric.data}
+                    <Plot
+                        metric={metric.name}
+                        clusterId={clusterId}
+                        data={metric.data}
+                        height={height}
+                        width={width / selectedMetrics.length}/>
+                {/key}
             {:else if metric.error}
                 <Card body color="danger">{metric.error.message}</Card>
             {:else if metric.loading}
