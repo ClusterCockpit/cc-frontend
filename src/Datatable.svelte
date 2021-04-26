@@ -8,10 +8,10 @@
         Spinner,
         ListGroup, ListGroupItem,
         Modal, ModalBody, ModalHeader, ModalFooter, Input } from 'sveltestrap';
-    import { flip } from 'svelte/animate';
     import { setContext } from 'svelte';
     import Pagination from './Pagination.svelte';
     import Filter from './FilterConfig.svelte';
+    import ColumnConfig from './ColumnConfig.svelte';
     import JobMeta from './JobMeta.svelte';
     import JobMetricPlots from './JobMetricPlots.svelte';
 
@@ -33,12 +33,7 @@
     };
 
     let metrics = [];
-    let unorderedSelectedMetrics = [];
-
-    /* Svelte's bind:group does not care about order, so reorder here */
     let selectedMetrics = [];
-    $: selectedMetrics = metrics.filter(metric =>
-        unorderedSelectedMetrics.includes(metric));
 
     let date;
     let showStats = false;
@@ -50,7 +45,7 @@
     const toggleFilter = () => (showFilters = !showFilters);
 
     let tableWidth;
-    let jobMetaWidth = 175; // TODO: Read actuall width/height
+    let jobMetaWidth = 180; // TODO: Read actuall width/height
     let jobMetaHeight = 200;
 
     initClient({ url: 'http://localhost:8080/query' });
@@ -90,13 +85,13 @@
 
                     if (metricUnits[config.name] != null)
                         /* TODO: Show proper warning? Show both units? */
-                        console.assert(metricUnits[config.name]);
+                        console.assert(metricUnits[config.name] == config.unit);
                     else
                         metricUnits[config.name] = config.unit;
                 }
             }
 
-            unorderedSelectedMetrics = metrics
+            selectedMetrics = metrics
                 .filter(m => res.data.clusters
                     .every(c => metricConfig[c.clusterID][m] != null))
                 .slice(0, 4);
@@ -168,31 +163,6 @@
             }
         });
     }
-
-    let columnHovering;
-
-    function columnsDragStart(event, i) {
-        event.dataTransfer.effectAllowed = 'move';
-        event.dataTransfer.dropEffect = 'move';
-        event.dataTransfer.setData('text/plain', i);
-    }
-
-    function columnsDrag(event, target) {
-        event.dataTransfer.dropEffect = 'move';
-        const start = Number.parseInt(event.dataTransfer.getData("text/plain"));
-        const newMetrics = metrics;
-
-        if (start < target) {
-            newMetrics.splice(target + 1, 0, newMetrics[start]);
-            newMetrics.splice(start, 1);
-        } else {
-            newMetrics.splice(target, 0, newMetrics[start]);
-            newMetrics.splice(start + 1, 1);
-        }
-        metrics = newMetrics;
-        columnHovering = null;
-    }
-
 </script>
 
 <style>
@@ -214,6 +184,13 @@
 
     :global(.cc-table-wrapper > table) {
         border-collapse: separate;
+        border-spacing: 0px;
+    }
+
+    :global(.cc-table-wrapper > table > tbody > tr > td) {
+        margin: 0px;
+        padding-left: 5px;
+        padding-right: 0px;
     }
 
     th.position-sticky.top-0 {
@@ -221,48 +198,7 @@
         z-index: 1000;
         border-bottom: 1px solid black;
     }
-
-    li.cc-config-column {
-        display: block;
-        cursor: grab;
-    }
-
-    li.cc-config-column.is-active {
-        background-color: #3273dc;
-        color: #fff;
-        cursor: grabbing;
-    }
-
 </style>
-
-<Modal isOpen={columnConfigOpen} toggle={toggleColumnConfig}>
-    <ModalHeader>
-        Configure columns
-    </ModalHeader>
-    <ModalBody>
-        <ListGroup>
-            {#each metrics as metric, index (metric)}
-                <li class="cc-config-column list-group-item"
-                    animate:flip draggable={true}
-                    on:dragstart={event => columnsDragStart(event, index)}
-                    on:drop|preventDefault={event => columnsDrag(event, index)}
-                    ondragover="return false"
-                    on:dragenter={() => columnHovering = index}
-                    class:is-active={columnHovering === index}>
-                    {#if unorderedSelectedMetrics.includes(metric) }
-                        <input type="checkbox" bind:group={unorderedSelectedMetrics} value={metric} checked>
-                    {:else }
-                        <input type="checkbox" bind:group={unorderedSelectedMetrics} value={metric}>
-                    {/if}
-                    {metric}
-                </li>
-            {/each}
-        </ListGroup>
-    </ModalBody>
-    <ModalFooter>
-        <Button color="primary" on:click={toggleColumnConfig}>Close</Button>
-    </ModalFooter>
-</Modal>
 
 <Modal isOpen={sortConfigOpen} toggle={toggleSortConfig}>
     <ModalHeader>
@@ -291,6 +227,11 @@
     </ModalFooter>
 </Modal>
 
+<ColumnConfig
+    bind:isOpen={columnConfigOpen}
+    bind:metrics={metrics}
+    bind:selectedMetrics={selectedMetrics} />
+
 <Filter {showFilters} on:update={handleFilter} />
 <div class="d-flex flex-row justify-content-between">
     <div>
@@ -317,7 +258,7 @@
 {:else}
     <Row>
         <div class="col cc-table-wrapper" bind:clientWidth={tableWidth}>
-            <Table>
+            <Table cellspacing="0px" cellpadding="0px">
                 <thead>
                     <tr>
                         <th class="position-sticky top-0" scope="col">
