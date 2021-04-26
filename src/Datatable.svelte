@@ -10,16 +10,15 @@
         Modal, ModalBody, ModalHeader, ModalFooter, Input } from 'sveltestrap';
     import { setContext } from 'svelte';
     import Pagination from './Pagination.svelte';
-    import Filter from './FilterConfig.svelte';
+    import Filter, { defaultFilterItems } from './FilterConfig.svelte';
     import ColumnConfig from './ColumnConfig.svelte';
     import JobMeta from './JobMeta.svelte';
     import JobMetricPlots from './JobMetricPlots.svelte';
 
     let itemsPerPage = 25;
     let page = 1;
-    let filterItems = [];
+    let filterItems = defaultFilterItems;
     let userFilter;
-    let filter = { "list": [{"duration": {"from": 60, "to": 84600}}]};
     let sorting = { field: "start_time", order: "DESC" };
     let paging = { itemsPerPage: itemsPerPage, page: page };
     let sortedColumns = {
@@ -118,13 +117,16 @@
            count
          }
      }
-     `, {filter, sorting, paging});
+     `, {filter: { list: defaultFilterItems }, sorting, paging});
 
     query(jobQuery);
 
     function handleFilter( event ) {
         filterItems = event.detail.filterItems;
-        $jobQuery.variables.filter = { "list": filterItems};
+        if (userFilter)
+            filterItems.push({ userId: { contains: userFilter }});
+
+        $jobQuery.variables.filter = { "list": filterItems };
     }
 
     function handlePaging( event ) {
@@ -134,8 +136,12 @@
     }
 
     function handleUserFilter ( event ) {
-        filterItems.push({userId: {contains: userFilter }});
-        $jobQuery.variables.filter = { "list": filterItems};
+        filterItems = filterItems.filter(f => !f.userId);
+
+        if (userFilter)
+            filterItems.push({ userId: { contains: userFilter }});
+
+        $jobQuery.variables.filter = { "list": filterItems };
     }
 
     function handleSorting( event ) {

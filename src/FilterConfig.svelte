@@ -1,11 +1,5 @@
-<script>
-    import { getColorForTag } from './utils.js';
-    import { createEventDispatcher } from "svelte";
-    import { Col, Row, FormGroup, Button, Input,
-             ListGroup, ListGroupItem, Card, Spinner } from 'sveltestrap';
-    import { operationStore, query } from '@urql/svelte';
-
-    let filters = {
+<script context="module">
+    export const defaultFilters = {
         numNodes: {
             from: 1, to: 64
         },
@@ -19,31 +13,82 @@
         }
     };
 
-    let selectedTag = { tagType: null, tagName: null };
+    export const defaultFilterItems = [
+        {numNodes: {from: 1, to: 64}},
+        {duration: {from: 600, to: 84600}},
+        {startTime: {from: "2014-01-01T12:00:00Z", to: "2021-03-30T23:00:00Z"}}
+    ];
+</script>
+
+<script>
+    import { getColorForTag } from './utils.js';
+    import { createEventDispatcher } from "svelte";
+    import { Col, Row, FormGroup, Button, Input,
+             ListGroup, ListGroupItem, Card, Spinner } from 'sveltestrap';
+    import { operationStore, query } from '@urql/svelte';
+
+    /* Deep clone: */
+    let filters = JSON.parse(JSON.stringify(defaultFilters));
 
     let tagsQuery = operationStore(`
         query {
             tags {
+                id,
                 tagName,
                 tagType
             }
         }
     `);
+
     query(tagsQuery);
 
-    export let resetFilter = [{"duration": {"from": 60, "to": 84600}}];
     export let showFilters = false;
     const dispatch = createEventDispatcher();
 
+    let tagFilterTerm = '';
+    let filteredTags = [];
+    let selectedTags = new Set();
+
+    function fuzzyMatch(term, string) {
+        return string.toLowerCase().includes(term);
+    }
+
+    function fuzzySearchTags(term, tags) {
+        if (!tags)
+            return;
+
+        let results = [];
+        for (let tag of tags) {
+            if (fuzzyMatch(term, tag.tagType) ||
+                fuzzyMatch(term, tag.tagName))
+                results.push(tag);
+        }
+        filteredTags = results;
+    }
+
+    $: fuzzySearchTags(tagFilterTerm, $tagsQuery.data && $tagsQuery.data.tags);
+
     function handleReset( ) {
-        dispatch("update", { resetFilter });
+        tagFilterTerm = '';
+        filters = JSON.parse(JSON.stringify(defaultFilters));
+        selectedTags.clear();
+        handleApply();
     }
 
     function handleTagSelection(tag) {
-        if (selectedTag.tagName == tag.tagName && selectedTag.tagType == tag.tagType)
-            selectedTag = { tagType: null, tagName: null };
-        else
-            selectedTag = tag;
+        /* TODO: How should the selection of
+         * multiple tags be handled (AND or OR)?
+         * Anyways, the cc-jobarchive has no support
+         * for that a.t.m.
+         */
+        if (selectedTags.has(tag)) {
+            selectedTags.delete(tag);
+        } else {
+            selectedTags.clear();
+            selectedTags.add(tag);
+        }
+
+        selectedTags = selectedTags;
     }
 
     function toTime({ date, time }) {
@@ -72,12 +117,9 @@
             }
         });
 
-        if (selectedTag.tagName != null || selectedTag.tagType != null) {
-            filterItems.push({
-                tagName: selectedTag.tagName,
-                tagType: selectedTag.tagType
-            });
-        }
+        selectedTags.forEach(tag => {
+            filterItems.push({ tagName: tag.tagName, tagType: tag.tagType });
+        });
 
         dispatch("update", { filterItems });
     }
@@ -86,6 +128,18 @@
 <style>
     .cc-tag.badge.rounded-pill {
         cursor: pointer;
+    }
+
+    .tags-list {
+        /* max-height: 250px; */
+        height: 15em;
+        overflow: scroll;
+        border: 1px solid #ccc;
+    }
+
+    .tags-search-input {
+        width: 100%;
+        margin-top: 20px;
     }
 </style>
 
@@ -193,15 +247,19 @@
                     {:else if $tagsQuery.error}
                         <Card body color="danger" class="mb-3"><h2>Error: {$tagsQuery.error.message}</h2></Card>
                     {:else}
-                        <ListGroup>
-                            {#each $tagsQuery.data.tags as tag}
-                                <ListGroupItem class="{tag.tagType == selectedTag.tagType && tag.tagName == selectedTag.tagName ? 'active' : ''}">
+                        <ul class="list-group tags-list">
+                            {#each filteredTags as tag}
+                                <ListGroupItem class="{selectedTags.has(tag) ? 'active' : ''}">
                                     <span class="cc-tag badge rounded-pill {getColorForTag(tag)}" on:click={_ => handleTagSelection(tag)}>
                                         {tag.tagType}: {tag.tagName}
                                     </span>
                                 </ListGroupItem>
                             {/each}
-                        </ListGroup>
+                        </ul>
+                        <input
+                            class="tags-search-input" type="text"
+                            placeholder="Search Tags (Click to Select)"
+                            bind:value={tagFilterTerm}>
                     {/if}
                 </Col>
             </Row>
