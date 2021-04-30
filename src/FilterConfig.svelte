@@ -43,11 +43,14 @@
     query(tagsQuery);
 
     export let showFilters = false;
+    export let clusters;
     const dispatch = createEventDispatcher();
 
     let tagFilterTerm = '';
+    let projectFilterTerm = '';
     let filteredTags = [];
     let selectedTags = new Set();
+    let selectedCluster = null;
 
     function fuzzyMatch(term, string) {
         return string.toLowerCase().includes(term);
@@ -70,23 +73,18 @@
 
     function handleReset( ) {
         tagFilterTerm = '';
+        projectFilterTerm = '';
         filters = JSON.parse(JSON.stringify(defaultFilters));
         selectedTags.clear();
+        selectedCluster = null;
         handleApply();
     }
 
     function handleTagSelection(tag) {
-        /* TODO: How should the selection of
-         * multiple tags be handled (AND or OR)?
-         * Anyways, the cc-jobarchive has no support
-         * for that a.t.m.
-         */
-        if (selectedTags.has(tag)) {
+        if (selectedTags.has(tag))
             selectedTags.delete(tag);
-        } else {
-            selectedTags.clear();
+        else
             selectedTags.add(tag);
-        }
 
         selectedTags = selectedTags;
     }
@@ -117,9 +115,14 @@
             }
         });
 
-        selectedTags.forEach(tag => {
-            filterItems.push({ tagName: tag.tagName, tagType: tag.tagType });
-        });
+        if (selectedTags.size > 0)
+            filterItems.push({ tags: Array.from(selectedTags).map(t => t.id) });
+
+        if (selectedCluster != null)
+            filterItems.push({ clusterId: { eq: selectedCluster } });
+
+        if (projectFilterTerm)
+            filterItems.push({ projectId: { contains: projectFilterTerm } });
 
         dispatch("update", { filterItems });
     }
@@ -131,8 +134,7 @@
     }
 
     .tags-list {
-        /* max-height: 250px; */
-        height: 15em;
+        height: 10em;
         overflow: scroll;
         border: 1px solid #ccc;
     }
@@ -232,6 +234,8 @@
                 </FormGroup>
             </Row>
         </Col>
+    </Row>
+    <Row>
         <Col>
             <Row>
                 <Col>
@@ -261,6 +265,44 @@
                             placeholder="Search Tags (Click to Select)"
                             bind:value={tagFilterTerm}>
                     {/if}
+                </Col>
+            </Row>
+        </Col>
+        <Col>
+            <Row>
+                <Col>
+                    <h5>Clusters</h5>
+                </Col>
+            </Row>
+            <Row>
+                <Col>
+                    <ListGroup>
+                        <ListGroupItem>
+                            <input type="radio" bind:group={selectedCluster} value={null}/>
+                            All
+                        </ListGroupItem>
+                        {#each clusters as cluster}
+                            <ListGroupItem>
+                                <input type="radio" bind:group={selectedCluster} value={cluster}/>
+                                {cluster}
+                            </ListGroupItem>
+                        {/each}
+                    </ListGroup>
+                </Col>
+            </Row>
+        </Col>
+        <Col>
+            <Row>
+                <Col>
+                    <h5>Project ID</h5>
+                </Col>
+            </Row>
+            <Row>
+                <Col>
+                    <input type="text"
+                        bind:value={projectFilterTerm}
+                        placeholder="Filter"
+                        style="width: 100%;">
                 </Col>
             </Row>
         </Col>

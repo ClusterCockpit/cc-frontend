@@ -1,11 +1,13 @@
 <script>
     import  { Modal, ModalBody, ModalHeader,
               ModalFooter, Button, ListGroup } from 'sveltestrap';
+    import { getContext } from 'svelte';
 
     export let metrics;
     export let selectedMetrics;
     export let isOpen;
 
+    const metricConfig = getContext('metric-config');
     let newMetricsOrder;
     let unorderedSelectedMetrics;
     let columnHovering;
@@ -76,6 +78,9 @@
                         <input type="checkbox" bind:group={unorderedSelectedMetrics} value={metric}>
                     {/if}
                     {metric}
+                    <span style="float: right;">
+                        {Object.keys(metricConfig).filter(c => metricConfig[c][metric] != null).join(', ')}
+                    </span>
                 </li>
             {/each}
         </ListGroup>

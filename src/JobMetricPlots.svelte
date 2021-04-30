@@ -10,9 +10,10 @@
     export let selectedMetrics;
 
     const rawQuery = `
-        query($jobId: String!, $metrics: [String]!) {
+        query($jobId: String!, $clusterId: String, $metrics: [String]!) {
             jobMetrics(
                 jobId: $jobId,
+                clusterId: $clusterId,
                 metrics: $metrics
             ) {
                 name,
@@ -33,7 +34,7 @@
     `;
 
     const jobDataQuery = operationStore(rawQuery, {
-        jobId,
+        jobId, clusterId,
         metrics: selectedMetrics
     });
 
@@ -71,7 +72,7 @@
             .filter(metric => !oldSelectedMetrics.includes(metric))
             .map(metric => {
                 getClient()
-                    .query(rawQuery, { jobId, metrics: [metric] })
+                    .query(rawQuery, { jobId, clusterId, metrics: [metric] })
                     .toPromise()
                     .then(res => {
                         if (res.error || res.data.jobMetrics.length != 1) {
@@ -104,13 +105,14 @@
         return sortQueryData(data);
     }
 
-    function jobIdChanged() {
-        $jobDataQuery.variables.jobId = jobId
+    function updateQuery() {
+        $jobDataQuery.variables.jobId = jobId;
+        $jobDataQuery.variables.clusterId = clusterId;
         oldSelectedMetrics = null;
         oldQueryData = null;
     }
 
-    $: jobIdChanged(jobId);
+    $: updateQuery(jobId, clusterId);
 
     query(jobDataQuery);
 </script>

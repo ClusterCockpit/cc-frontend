@@ -19,16 +19,16 @@
     let page = 1;
     let filterItems = defaultFilterItems;
     let userFilter;
-    let sorting = { field: "start_time", order: "DESC" };
+    let sorting = { field: "startTime", order: "DESC" };
     let paging = { itemsPerPage: itemsPerPage, page: page };
     let sortedColumns = {
-        startTime:   {type: "numeric", direction: ["down","up"], order: ["DESC","ASC"], field: "start_time",    current: 0},
-        duration:    {type: "numeric", direction: ["down","up"], order: ["DESC","ASC"], field: "duration",      current: 2},
-        numNodes:    {type: "numeric", direction: ["down","up"], order: ["DESC","ASC"], field: "num_nodes",     current: 2},
-        memUsedMax:  {type: "numeric", direction: ["down","up"], order: ["DESC","ASC"], field: "mem_used_max",  current: 2},
-        flopsAnyAvg: {type: "numeric", direction: ["down","up"], order: ["DESC","ASC"], field: "flops_any_avg", current: 2},
-        memBwAvg:    {type: "numeric", direction: ["down","up"], order: ["DESC","ASC"], field: "mem_bw_avg",    current: 2},
-        netBwAvg:    {type: "numeric", direction: ["down","up"], order: ["DESC","ASC"], field: "net_bw_avg",    current: 2},
+        startTime:   {type: "numeric", direction: ["down","up"], order: ["DESC","ASC"], field: "startTime",   current: 0},
+        duration:    {type: "numeric", direction: ["down","up"], order: ["DESC","ASC"], field: "duration",    current: 2},
+        numNodes:    {type: "numeric", direction: ["down","up"], order: ["DESC","ASC"], field: "numNodes",    current: 2},
+        memUsedMax:  {type: "numeric", direction: ["down","up"], order: ["DESC","ASC"], field: "memUsedMax",  current: 2},
+        flopsAnyAvg: {type: "numeric", direction: ["down","up"], order: ["DESC","ASC"], field: "flopsAnyAvg", current: 2},
+        memBwAvg:    {type: "numeric", direction: ["down","up"], order: ["DESC","ASC"], field: "memBwAvg",    current: 2},
+        netBwAvg:    {type: "numeric", direction: ["down","up"], order: ["DESC","ASC"], field: "netBwAvg",    current: 2},
     };
 
     let metrics = [];
@@ -47,7 +47,8 @@
     let jobMetaWidth = 180; // TODO: Read actuall width/height
     let jobMetaHeight = 200;
 
-    initClient({ url: 'http://localhost:8080/query' });
+    initClient({ url: 'http://localhost:8080/query' }); // cc-jobarchive as Backend
+    // initClient({ url: 'http://localhost:8000/query/' }); // ClusterCockpit as Backend
 
     let metricUnits = null;
     const metricConfig = {};
@@ -80,13 +81,14 @@
                 metricConfig[cluster.clusterID] = {};
                 for (let config of cluster.metricConfig) {
                     metricConfig[cluster.clusterID][config.name] = config;
-                    metrics.push(config.name);
 
-                    if (metricUnits[config.name] != null)
+                    if (metricUnits[config.name] != null) {
                         /* TODO: Show proper warning? Show both units? */
                         console.assert(metricUnits[config.name] == config.unit);
-                    else
+                    } else {
                         metricUnits[config.name] = config.unit;
+                        metrics.push(config.name);
+                    }
                 }
             }
 
@@ -238,7 +240,9 @@
     bind:metrics={metrics}
     bind:selectedMetrics={selectedMetrics} />
 
-<Filter {showFilters} on:update={handleFilter} />
+<Filter {showFilters}
+    clusters={Object.keys(metricConfig)}
+    on:update={handleFilter} />
 <div class="d-flex flex-row justify-content-between">
     <div>
         <Button outline color=success  on:click={toggleFilter}><Icon name="filter" /></Button>
