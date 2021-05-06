@@ -16,6 +16,36 @@
             from: { date: "0000-00-00" , time: "00:00"},
             to: { date:  "0000-00-00", time: "00:00"}
         },
+        statistics: [
+            {
+                filter: 'flopsAnyAvg',
+                metric: 'flops_any',
+                name: 'Flops Any (Avg)',
+                enabled: false,
+                from: 0, to: 0
+            },
+            {
+                filter: 'memBwAvg',
+                metric: 'mem_bw',
+                name: 'Mem. Bw. (Avg)',
+                enabled: false,
+                from: 0, to: 0
+            },
+            {
+                filter: 'loadAvg',
+                metric: 'cpu_load',
+                name: 'Load (Avg)',
+                enabled: false,
+                from: 0, to: 0
+            },
+            {
+                filter: 'memUsedMax',
+                metric: 'mem_used',
+                name: 'Mem. Used (Max)',
+                enabled: false,
+                from: 0, to: 0
+            }
+        ],
         cluster: null,
         tags: {}
     };
@@ -50,6 +80,18 @@
         if (tags.length > 0)
             filterItems.push({ tags });
 
+        for (let stat of filters.statistics) {
+            if (!stat.enabled)
+                continue;
+
+            filterItems.push({
+                [stat.filter]: {
+                    from: stat.from,
+                    to: stat.to
+                }
+            });
+        }
+
         return filterItems;
     }
 
@@ -58,7 +100,7 @@
 
 <script>
     import { getColorForTag } from './utils.js';
-    import { createEventDispatcher } from "svelte";
+    import { createEventDispatcher, getContext } from "svelte";
     import { Col, Row, FormGroup, Button, Input,
              ListGroup, ListGroupItem, Card, Spinner } from 'sveltestrap';
     import { operationStore, query } from '@urql/svelte';
@@ -91,6 +133,7 @@
     let filteredTags = [];
     let currentRanges = { numNodes: { from: 0, to: 500 } };
     let appliedFilters = defaultFilters;
+    let metricConfig = getContext('metric-config');
 
     function fuzzyMatch(term, string) {
         return string.toLowerCase().includes(term);
@@ -126,6 +169,14 @@
         return { hours, min };
     }
 
+    function getPeakValue(metric) {
+        if (filters.cluster)
+            return metricConfig[filters.cluster][metric].peak;
+
+        return clusters.reduce((max, c) =>
+            Math.max(max, metricConfig[c.clusterID][metric].peak), 0);
+    }
+
     /* Gets called when a cluster is selected
      * and once the filterRanges have been loaded (via GraphQL).
      */
@@ -150,6 +201,11 @@
         filters.startTime.to = fromRFC3339(ranges.startTime.to);
         filters.duration.from = secondsToHours(ranges.duration.from);
         filters.duration.to = secondsToHours(ranges.duration.to);
+
+        for (let stat of filters.statistics) {
+            stat.from = 0;
+            stat.to = getPeakValue(stat.metric);
+        }
     }
 
     /* Later used for 'Reset' button: */
@@ -165,6 +221,9 @@
 
         defaultFilters.duration.from = secondsToHours(filterRanges.duration.from);
         defaultFilters.duration.to = secondsToHours(filterRanges.duration.to);
+
+        for (let stat of defaultFilters.statistics)
+            stat.to = getPeakValue(stat.metric);
 
         appliedFilters = defaultFilters;
         filters = deepCopy(defaultFilters);
@@ -225,6 +284,10 @@
 
     .applied-filters {
         margin-bottom: 10px;
+    }
+
+    table th, table td {
+        border-bottom: none;
     }
 </style>
 
@@ -394,6 +457,43 @@
                         bind:value={projectFilterTerm}
                         placeholder="Filter"
                         style="width: 100%;">
+                </Col>
+            </Row>
+        </Col>
+        <Col xs="6">
+            <Row>
+                <Col>
+                    <h5>Job Statistics</h5>
+                </Col>
+            </Row>
+            <Row>
+                <Col>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Statistic</th>
+                                <th>Enabled</th>
+                                <th>From</th>
+                                <th>To</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {#each filters.statistics as stat (stat)}
+                            <tr>
+                                <td>{stat.name}</td>
+                                <td>
+                                    <input type="checkbox" bind:checked={stat.enabled}>
+                                </td>
+                                <td>
+                                    <input type="number" bind:value={stat.from}>
+                                </td>
+                                <td>
+                                    <input type="number" bind:value={stat.to}>
+                                </td>
+                            </tr>
+                            {/each}
+                        </tbody>
+                    </table>
                 </Col>
             </Row>
         </Col>
