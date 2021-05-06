@@ -99,7 +99,10 @@
     query(jobQuery);
 
     function handleFilter( event ) {
-        filterItems = event.detail.filterItems;
+        if (event.detail && event.detail.filterItems)
+            filterItems = event.detail.filterItems;
+
+        filterItems = filterItems.filter(f => f.userId == null);
         if (userFilter)
             filterItems.push({ userId: { contains: userFilter }});
 
@@ -112,13 +115,19 @@
         $jobQuery.variables.paging = {itemsPerPage: itemsPerPage, page: page };
     }
 
-    function handleUserFilter ( event ) {
-        filterItems = filterItems.filter(f => !f.userId);
+    /* Run query when the user has
+     * stopped typing for 350ms:
+     */
+    let searchTimeoutId = null;
+    const searchDelay = 350;
+    function handleUserFilter( event ) {
+        if (searchTimeoutId !== null)
+            clearTimeout(searchTimeoutId);
 
-        if (userFilter)
-            filterItems.push({ userId: { contains: userFilter }});
-
-        $jobQuery.variables.filter = { "list": filterItems };
+        searchTimeoutId = setTimeout(() => {
+            handleFilter(event);
+            searchTimeoutId = null;
+        }, searchDelay);
     }
 
     function handleSorting( event ) {
@@ -228,7 +237,7 @@
         <div class="input-group-prepend">
             <div class="input-group-text"><Icon name="search" /></div>
         </div>
-        <input type="search" bind:value={userFilter} on:change={handleUserFilter} class="form-control"  placeholder="Filter userId">
+        <input type="search" bind:value={userFilter} on:input={handleUserFilter} class="form-control"  placeholder="Filter userId">
       </div>
     <div>
         <Button outline on:click={toggleSortConfig}><Icon name="sort-down" /></Button>
