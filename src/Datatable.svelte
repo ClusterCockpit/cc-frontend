@@ -14,6 +14,7 @@
     import ColumnConfig from './ColumnConfig.svelte';
     import JobMeta from './JobMeta.svelte';
     import JobMetricPlots from './JobMetricPlots.svelte';
+    import { fetchClusters } from './utils.js';
 
     let itemsPerPage = 25;
     let page = 1;
@@ -43,60 +44,34 @@
     const toggleSortConfig = () => (sortConfigOpen = !sortConfigOpen);
     const toggleFilter = () => (showFilters = !showFilters);
 
-    let tableWidth;
-    let jobMetaWidth = 180; // TODO: Read actuall width/height
-    let jobMetaHeight = 200;
+    let tableWidth, plotWidth;
+    let jobMetaWidth = 200;
+    let rowHeight = 200;
+    $: {
+        const elm = document.querySelector('.cc-table-wrapper tbody td:first-child > div');
+        if (elm)
+            rowHeight = Math.max(200, elm.offsetHeight);
+
+        plotWidth = Math.floor((tableWidth - jobMetaWidth) / selectedMetrics.length - 10);
+    }
 
     initClient({ url: 'http://localhost:8080/query' }); // cc-jobarchive as Backend
     // initClient({ url: 'http://localhost:8000/query/' }); // ClusterCockpit as Backend
 
-    let metricUnits = null;
+    const metricUnits = {};
     const metricConfig = {};
     setContext('metric-config', metricConfig);
 
-    getClient()
-        .query(`query {
-            clusters {
-                clusterID,
-                metricConfig {
-                    name
-                    unit
-                    peak
-                    normal
-                    caution
-                    alert
-                }
-            }
-        }`)
-        .toPromise()
-        .then(res => {
-            if (res.error) {
-                console.error(res.error);
-                return;
-            }
+    let clusterNames = [];
+    fetchClusters(metricConfig, metricUnits).then(({ clusters }) => {
+        clusterNames = clusters.map(c => c.clusterID);
+        metrics = Object.keys(metricUnits);
 
-            metrics = [];
-            metricUnits = {};
-            for (let cluster of res.data.clusters) {
-                metricConfig[cluster.clusterID] = {};
-                for (let config of cluster.metricConfig) {
-                    metricConfig[cluster.clusterID][config.name] = config;
-
-                    if (metricUnits[config.name] != null) {
-                        /* TODO: Show proper warning? Show both units? */
-                        console.assert(metricUnits[config.name] == config.unit);
-                    } else {
-                        metricUnits[config.name] = config.unit;
-                        metrics.push(config.name);
-                    }
-                }
-            }
-
-            selectedMetrics = metrics
-                .filter(m => res.data.clusters
-                    .every(c => metricConfig[c.clusterID][m] != null))
-                .slice(0, 4);
-        });
+        selectedMetrics = metrics
+            .filter(m => clusters.every(c =>
+                metricConfig[c.clusterID][m] != null))
+            .slice(0, 4);
+    });
 
     const jobQuery = operationStore(`
     query($filter: JobFilterList!, $sorting: OrderByInput!, $paging: PageRequest! ){
@@ -193,6 +168,7 @@
     :global(.cc-table-wrapper > table) {
         border-collapse: separate;
         border-spacing: 0px;
+        table-layout: fixed;
     }
 
     :global(.cc-table-wrapper > table > tbody > tr > td) {
@@ -241,7 +217,7 @@
     bind:selectedMetrics={selectedMetrics} />
 
 <Filter {showFilters}
-    clusters={Object.keys(metricConfig)}
+    clusters={clusterNames}
     on:update={handleFilter} />
 <div class="d-flex flex-row justify-content-between">
     <div>
@@ -271,11 +247,12 @@
             <Table cellspacing="0px" cellpadding="0px">
                 <thead>
                     <tr>
-                        <th class="position-sticky top-0" scope="col">
+                        <th class="position-sticky top-0" scope="col" style="width: {jobMetaWidth}px">
                             Job Info
                         </th>
                         {#each selectedMetrics as metric}
-                            <th class="position-sticky top-0 text-center" scope="col">
+                            <th class="position-sticky top-0 text-center" scope="col"
+                                style="width: {plotWidth}px">
                                 {metric}
                                 {#if metricUnits[metric]}
                                     ({metricUnits[metric]})
@@ -287,15 +264,15 @@
                 <tbody>
                     {#each $jobQuery.data.jobs.items as row, i}
                         <tr>
-                            <td style="width: {jobMetaWidth}px; height: {jobMetaHeight}px;">
+                            <td style="width: {jobMetaWidth}px;">
                                 <JobMeta job={row} />
                             </td>
                             {#if row["hasProfile"]}
                                 <JobMetricPlots
                                     jobId={row["jobId"]}
                                     clusterId={row["clusterId"]}
-                                    width={tableWidth - jobMetaWidth - 50}
-                                    height={jobMetaHeight}
+                                    width={plotWidth}
+                                    height={rowHeight}
                                     selectedMetrics={selectedMetrics} />
                             {:else}
                                 <td colspan="{selectedMetrics.length}">
