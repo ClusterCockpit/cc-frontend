@@ -1,23 +1,59 @@
 <script context="module">
+    /* The values in here are only
+     * used while the GraphQL clusters
+     * query is still loading. After that,
+     * the values are replaced.
+     */
     export const defaultFilters = {
         numNodes: {
-            from: 1, to: 64
+            from: 0, to: 0
         },
         duration: {
-            from: { hours: 0, min: 10 },
-            to: { hours: 24, min: 0 }
+            from: { hours: 0, min: 0 },
+            to: { hours: 0, min: 0 }
         },
         startTime: {
-            from: { date: "2014-01-01" , time: "12:00"},
-            to: { date:  "2021-03-30", time: "23:00"}
-        }
+            from: { date: "0000-00-00" , time: "00:00"},
+            to: { date:  "0000-00-00", time: "00:00"}
+        },
+        cluster: null,
+        tags: {}
     };
 
-    export const defaultFilterItems = [
-        {numNodes: {from: 1, to: 64}},
-        {duration: {from: 600, to: 84600}},
-        {startTime: {from: "2014-01-01T12:00:00Z", to: "2021-03-30T23:00:00Z"}}
-    ];
+    function toRFC3339({ date, time }) {
+        return `${date}T${time}:00Z`;
+    }
+
+    function getFilterItems(filters) {
+        let filterItems = [];
+
+        filterItems.push({ numNodes: {
+            from: filters["numNodes"]["from"],
+            to:   filters["numNodes"]["to"]
+        }});
+
+        filterItems.push({ startTime: {
+            from: toRFC3339(filters["startTime"]["from"]),
+            to:   toRFC3339(filters["startTime"]["to"])
+        }});
+
+        let from = filters["duration"]["from"]["hours"] * 3600
+                + filters["duration"]["from"]["min"] * 60;
+        let to = filters["duration"]["to"]["hours"] * 3600
+                + filters["duration"]["to"]["min"] * 60;
+        filterItems.push({ duration: { from: from , to: to } });
+
+        if (filters["cluster"] != null)
+            filterItems.push({ clusterId: { eq: filters["cluster"] } });
+
+        let tags = Object.keys(filters["tags"]);
+        if (tags.length > 0)
+            filterItems.push({ tags });
+
+        return filterItems;
+    }
+
+    export const defaultFilterItems = [];
 </script>
 
 <script>
@@ -27,8 +63,11 @@
              ListGroup, ListGroupItem, Card, Spinner } from 'sveltestrap';
     import { operationStore, query } from '@urql/svelte';
 
-    /* Deep clone: */
-    let filters = JSON.parse(JSON.stringify(defaultFilters));
+    function deepCopy(obj) {
+        return JSON.parse(JSON.stringify(obj));
+    }
+
+    let filters = deepCopy(defaultFilters);
 
     let tagsQuery = operationStore(`
         query {
@@ -44,13 +83,14 @@
 
     export let showFilters = false;
     export let clusters;
+    export let filterRanges; /* Global filter ranges for all clusters */
     const dispatch = createEventDispatcher();
 
     let tagFilterTerm = '';
     let projectFilterTerm = '';
     let filteredTags = [];
-    let selectedTags = new Set();
-    let selectedCluster = null;
+    let currentRanges = { numNodes: { from: 0, to: 500 } };
+    let appliedFilters = defaultFilters;
 
     function fuzzyMatch(term, string) {
         return string.toLowerCase().includes(term);
@@ -71,59 +111,98 @@
 
     $: fuzzySearchTags(tagFilterTerm, $tagsQuery.data && $tagsQuery.data.tags);
 
+    function fromRFC3339(rfc3339) {
+        let parts = rfc3339.split('T');
+        return {
+            date: parts[0],
+            time: parts[1].split(':', 2).join(':')
+        };
+    }
+
+    function secondsToHours(duration) {
+        const hours = Math.floor(duration / 3600);
+        duration -= hours * 3600;
+        const min = Math.floor(duration / 60);
+        return { hours, min };
+    }
+
+    /* Gets called when a cluster is selected
+     * and once the filterRanges have been loaded (via GraphQL).
+     */
+    function updateRanges() {
+        if (!filterRanges || !clusters)
+            return;
+
+        let ranges = filters.cluster
+            ? clusters.find(c => c.clusterID == filters.cluster).filterRanges
+            : filterRanges;
+
+        currentRanges.numNodes = ranges.numNodes;
+
+        // function clamp(x, { from, to }) {
+        //     return x < from ? from : (x < to ? x : to);
+        // }
+
+        // TODO: Clamp values instead?
+        filters.numNodes.from = ranges.numNodes.from;
+        filters.numNodes.to = ranges.numNodes.to;
+        filters.startTime.from = fromRFC3339(ranges.startTime.from);
+        filters.startTime.to = fromRFC3339(ranges.startTime.to);
+        filters.duration.from = secondsToHours(ranges.duration.from);
+        filters.duration.to = secondsToHours(ranges.duration.to);
+    }
+
+    /* Later used for 'Reset' button: */
+    function setDefaultFilters() {
+        if (!filterRanges)
+            return null;
+
+        defaultFilters.numNodes.from = filterRanges.numNodes.from;
+        defaultFilters.numNodes.to = filterRanges.numNodes.to;
+
+        defaultFilters.startTime.from = fromRFC3339(filterRanges.startTime.from);
+        defaultFilters.startTime.to = fromRFC3339(filterRanges.startTime.to);
+
+        defaultFilters.duration.from = secondsToHours(filterRanges.duration.from);
+        defaultFilters.duration.to = secondsToHours(filterRanges.duration.to);
+
+        appliedFilters = defaultFilters;
+        filters = deepCopy(defaultFilters);
+    }
+
+    $: setDefaultFilters(filterRanges);
+    $: updateRanges(filterRanges, clusters);
+
+    function formatDuration({ hours, min }) {
+        hours = hours.toString().padStart(2, '0');
+        min = min.toString().padStart(2, '0');
+        return `${hours}:${min}h`
+    }
+
     function handleReset( ) {
         tagFilterTerm = '';
         projectFilterTerm = '';
-        filters = JSON.parse(JSON.stringify(defaultFilters));
-        selectedTags.clear();
-        selectedCluster = null;
+        filters = deepCopy(defaultFilters);
+        appliedFilters = defaultFilters;
         handleApply();
     }
 
     function handleTagSelection(tag) {
-        if (selectedTags.has(tag))
-            selectedTags.delete(tag);
+        if (filters["tags"][tag.id])
+            delete filters["tags"][tag.id];
         else
-            selectedTags.add(tag);
+            filters["tags"][tag.id] = tag;
 
-        selectedTags = selectedTags;
-    }
-
-    function toTime({ date, time }) {
-        return `${date}T${time}:00Z`; /* Expected: rfc3339 */
+        filteredTags = filteredTags;
     }
 
     function handleApply( ) {
-        let filterItems = [];
-        const keys = Object.keys(filters);
-
-        keys.forEach((key, index) => {
-            switch(key) {
-                case "numNodes":
-                    filterItems.push({numNodes: {"from": filters["numNodes"]["from"], to:  filters["numNodes"]["to"]}});
-                    break;
-                case "startTime":
-                    filterItems.push({ startTime: {
-                        from: toTime(filters["startTime"]["from"]),
-                        to: toTime(filters["startTime"]["to"])
-                    } });
-                    break;
-                case "duration":
-                    var from = filters["duration"]["from"]["hours"] * 3600 + filters["duration"]["from"]["min"] * 60;
-                    var to = filters["duration"]["to"]["hours"] * 3600 + filters["duration"]["to"]["min"] * 60;
-                    filterItems.push({duration: {from: from , to: to }});
-            }
-        });
-
-        if (selectedTags.size > 0)
-            filterItems.push({ tags: Array.from(selectedTags).map(t => t.id) });
-
-        if (selectedCluster != null)
-            filterItems.push({ clusterId: { eq: selectedCluster } });
+        let filterItems = getFilterItems(filters);
 
         if (projectFilterTerm)
             filterItems.push({ projectId: { contains: projectFilterTerm } });
 
+        appliedFilters = deepCopy(filters);
         dispatch("update", { filterItems });
     }
 </script>
@@ -142,6 +221,10 @@
     .tags-search-input {
         width: 100%;
         margin-top: 20px;
+    }
+
+    .applied-filters {
+        margin-bottom: 10px;
     }
 </style>
 
@@ -224,13 +307,17 @@
             <p>Between</p>
             <Row>
                 <FormGroup class="col">
-                    <Input type=number bind:value={filters["numNodes"]["from"]} min=1 max=64 />
-                    <Input type=range bind:value={filters["numNodes"]["from"]} min=1 max=64 />
+                    <Input type=number bind:value={filters["numNodes"]["from"]}
+                        min="{currentRanges.numNodes.from}" max="{currentRanges.numNodes.to}" />
+                    <Input type=range bind:value={filters["numNodes"]["from"]}
+                        min="{currentRanges.numNodes.from}" max="{currentRanges.numNodes.to}" />
                 </FormGroup>
                 <p>and</p>
                 <FormGroup class="col">
-                    <Input type=number bind:value={filters["numNodes"]["to"]} min=1 max=64 />
-                    <Input type=range bind:value={filters["numNodes"]["to"]} min=1 max=64 />
+                    <Input type=number bind:value={filters["numNodes"]["to"]}
+                        min="{currentRanges.numNodes.from}" max="{currentRanges.numNodes.to}" />
+                    <Input type=range bind:value={filters["numNodes"]["to"]}
+                        min="{currentRanges.numNodes.from}" max="{currentRanges.numNodes.to}" />
                 </FormGroup>
             </Row>
         </Col>
@@ -253,7 +340,7 @@
                     {:else}
                         <ul class="list-group tags-list">
                             {#each filteredTags as tag}
-                                <ListGroupItem class="{selectedTags.has(tag) ? 'active' : ''}">
+                                <ListGroupItem class="{filters["tags"][tag.id] ? 'active' : ''}">
                                     <span class="cc-tag badge rounded-pill {getColorForTag(tag)}" on:click={_ => handleTagSelection(tag)}>
                                         {tag.tagType}: {tag.tagName}
                                     </span>
@@ -278,13 +365,17 @@
                 <Col>
                     <ListGroup>
                         <ListGroupItem>
-                            <input type="radio" bind:group={selectedCluster} value={null}/>
+                            <input type="radio" value={null}
+                                bind:group={filters["cluster"]}
+                                on:change={updateRanges} />
                             All
                         </ListGroupItem>
-                        {#each clusters as cluster}
+                        {#each (clusters || []) as cluster}
                             <ListGroupItem>
-                                <input type="radio" bind:group={selectedCluster} value={cluster}/>
-                                {cluster}
+                                <input type="radio" value={cluster.clusterID}
+                                    bind:group={filters["cluster"]}
+                                    on:change={updateRanges} />
+                                {cluster.clusterID}
                             </ListGroupItem>
                         {/each}
                     </ListGroup>
@@ -316,3 +407,47 @@
         </div>
     </div>
 {/if}
+
+<div class="applied-filters d-flex flex-row justify-content-between">
+    <div>
+        <b>Applied Filters:</b>
+    </div>
+    <div>
+        Clusters:
+        <br>
+        {appliedFilters["cluster"] == null
+            ? (clusters || []).map(c => c.clusterID).join(', ')
+            : appliedFilters["cluster"]}
+    </div>
+    <div>
+        Tags:
+        {#each Object.values(appliedFilters["tags"]) as tag}
+            <br>
+            <span class="cc-tag badge rounded-pill {getColorForTag(tag)}">
+                {tag.tagType}: {tag.tagName}
+            </span>
+        {:else}
+            -
+        {/each}
+    </div>
+    <div>
+        Nodes:
+        <br>
+        {appliedFilters["numNodes"]["from"]} - {appliedFilters["numNodes"]["to"]}
+    </div>
+    <div>
+        Duration:
+        <br>
+        {formatDuration(appliedFilters["duration"]["from"])} -
+        {formatDuration(appliedFilters["duration"]["to"])}
+    </div>
+    <div>
+        Start Time:
+        <br>
+        {appliedFilters["startTime"]["from"]["date"]}
+        {appliedFilters["startTime"]["from"]["time"]}
+        -
+        {appliedFilters["startTime"]["to"]["date"]}
+        {appliedFilters["startTime"]["to"]["time"]}
+    </div>
+</div>

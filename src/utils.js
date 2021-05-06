@@ -30,6 +30,16 @@ export async function fetchClusters(metricConfig = {}, metricUnits = {}) {
                     caution
                     alert
                 }
+                filterRanges {
+                    duration { from, to }
+                    numNodes { from, to }
+                    startTime { from, to }
+                }
+            }
+            filterRanges {
+                duration { from, to }
+                numNodes { from, to }
+                startTime { from, to }
             }
         }`);
 
@@ -57,6 +67,7 @@ export async function fetchClusters(metricConfig = {}, metricUnits = {}) {
 
     return {
         clusters: res.data.clusters,
+        filterRanges: res.data.filterRanges,
         metricConfig,
         metricUnits
     };

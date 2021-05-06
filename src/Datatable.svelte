@@ -35,8 +35,6 @@
     let metrics = [];
     let selectedMetrics = [];
 
-    let date;
-    let showStats = false;
     let columnConfigOpen = false;
     let sortConfigOpen = false;
     let showFilters = false;
@@ -62,16 +60,18 @@
     const metricConfig = {};
     setContext('metric-config', metricConfig);
 
-    let clusterNames = [];
-    fetchClusters(metricConfig, metricUnits).then(({ clusters }) => {
-        clusterNames = clusters.map(c => c.clusterID);
+    let clusters = null;
+    let filterRanges = null;
+    fetchClusters(metricConfig, metricUnits).then(res => {
+        clusters = res.clusters;
+        filterRanges = res.filterRanges;
         metrics = Object.keys(metricUnits);
 
         selectedMetrics = metrics
             .filter(m => clusters.every(c =>
                 metricConfig[c.clusterID][m] != null))
             .slice(0, 4);
-    });
+    }, err => console.error(err));
 
     const jobQuery = operationStore(`
     query($filter: JobFilterList!, $sorting: OrderByInput!, $paging: PageRequest! ){
@@ -217,7 +217,8 @@
     bind:selectedMetrics={selectedMetrics} />
 
 <Filter {showFilters}
-    clusters={clusterNames}
+    clusters={clusters}
+    filterRanges={filterRanges}
     on:update={handleFilter} />
 <div class="d-flex flex-row justify-content-between">
     <div>
