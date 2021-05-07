@@ -1,41 +1,54 @@
 <!--
-MIT License
-
 Copyright (c) 2021 Michael Keller
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
--->
-
-<!--
-This file was copied over from https://github.com/mhkeller/svelte-double-range-slider.
-The only change made was removing the 'yootils' dependency
-and adding this comment and the license.
+Originally created by Michael Keller (https://github.com/mhkeller/svelte-double-range-slider)
+Changes: remove dependency, text inputs, configurable value ranges, on:change event
 -->
 
 <script>
-	export let start = 0;
-	export let end = 1;
+	import { createEventDispatcher } from "svelte";
+
+	export let min;
+	export let max;
+	export let firstSlider;
+	export let secondSlider;
+
+	const dispatch = createEventDispatcher();
+
+	let values;
+	let start, end; /* Positions of sliders from 0 to 1 */
+	$: values = [firstSlider, secondSlider]; /* Avoid feedback loop */
+	$: start = (firstSlider - min) / (max - min);
+    $: end = (secondSlider - min) / (max - min);
 
 	let leftHandle;
-
 	let body;
 	let slider;
+
+	function update() {
+		values = [
+			Math.floor(min + start  * (max - min)),
+			Math.floor(min + end * (max - min))
+		];
+		dispatch('change', values);
+	}
+
+	function inputChanged(idx, event) {
+		let val = Number.parseInt(event.target.value);
+		console.log(val, min, max);
+		if (Number.isNaN(val) || val < min) {
+			event.target.classList.add('bad');
+			return;
+		}
+
+		values[idx] = val;
+		event.target.classList.remove('bad');
+		if (idx == 0)
+			start = clamp((val - min) / (max - min), 0., 1.);
+		else
+			end = clamp((val - min) / (max - min), 0., 1.);
+
+		dispatch('change', values);
+	}
 
 	function clamp(x, min, max) {
 		return x < min
@@ -121,6 +134,8 @@ and adding this comment and the license.
 				start = Math.min(p, start);
 				end = p;
 			}
+
+			update();
 		}
 	}
 
@@ -140,10 +155,22 @@ and adding this comment and the license.
 
 		start = pStart;
 		end = pEnd;
+		update();
 	}
 </script>
 
 <div class="double-range-container">
+	<div class="header">
+		<input type="text" placeholder="from..."
+			on:input={(e) => inputChanged(0, e)}
+			bind:value={values[0]}/>
+
+		<span>Full Range: <b> {min} </b> - <b> {max} </b></span>
+
+		<input type="text" placeholder="to..."
+			on:input={(e) => inputChanged(1, e)}
+			bind:value={values[1]}/>
+	</div>
 	<div class="slider" bind:this={slider}>
 		<div
 			class="body"
@@ -178,9 +205,29 @@ and adding this comment and the license.
 </div>
 
 <style>
+	.header {
+		width: 100%;
+		display: flex;
+		justify-content: space-between;
+		margin-bottom: -5px;
+	}
+	.header :nth-child(2) {
+		padding-top: 10px;
+	}
+	.header input {
+		height: 25px;
+		border-radius: 5px;
+		width: 100px;
+	}
+
+	:global(.double-range-container .header input[type="text"].bad) {
+		color: #ff5c33;
+		border-color: #ff5c33;
+	}
+
 	.double-range-container {
 		width: 100%;
-		height: 20px;
+		height: 50px;
 		user-select: none;
 		box-sizing: border-box;
 		white-space: nowrap
@@ -189,11 +236,11 @@ and adding this comment and the license.
 		position: relative;
 		width: 100%;
 		height: 6px;
-		top: 50%;
+		top: 10px;
 		transform: translate(0, -50%);
 		background-color: #e2e2e2;
 		box-shadow: inset 0 7px 10px -5px #4a4a4a, inset 0 -1px 0px 0px #9c9c9c;
-		border-radius: 1px;
+		border-radius: 6px;
 	}
 	.handle {
 		position: absolute;

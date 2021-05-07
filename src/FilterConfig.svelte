@@ -107,7 +107,7 @@
     import { createEventDispatcher, getContext } from "svelte";
     import { Col, Row, FormGroup, Button, Input,
              ListGroup, ListGroupItem, Card, Spinner } from 'sveltestrap';
-    import RangeSelector from './utils/RangeSelector.svelte';
+    import DoubleRangeSlider from './DoubleRangeSlider.svelte';
     import { operationStore, query } from '@urql/svelte';
 
     function deepCopy(obj) {
@@ -293,14 +293,14 @@
         dispatch("update", { filterItems });
     }
 
-    function handleNodesSlider({ detail: { from, to } }) {
-        filters.numNodes.from = from;
-        filters.numNodes.to = to;
+    function handleNodesSlider({ detail }) {
+        filters.numNodes.from = detail[0];
+        filters.numNodes.to = detail[1];
     }
 
-    function handleStatisticsSlider(stat, { detail: { from, to } }) {
-        stat.from = from;
-        stat.to = to;
+    function handleStatisticsSlider(stat, { detail }) {
+        stat.from = detail[0];
+        stat.to = detail[1];
     }
 </script>
 
@@ -414,25 +414,10 @@
                     <h5>Number of nodes</h5>
                 </Col>
             </Row>
-            <!-- <p>Between</p> -->
             <Row>
-                <!-- <FormGroup class="col">
-                    <Input type=number bind:value={filters["numNodes"]["from"]}
-                        min="{currentRanges.numNodes.from}" max="{currentRanges.numNodes.to}" />
-                    <Input type=range bind:value={filters["numNodes"]["from"]}
-                        min="{currentRanges.numNodes.from}" max="{currentRanges.numNodes.to}" />
-                </FormGroup>
-                <p>and</p>
-                <FormGroup class="col">
-                    <Input type=number bind:value={filters["numNodes"]["to"]}
-                        min="{currentRanges.numNodes.from}" max="{currentRanges.numNodes.to}" />
-                    <Input type=range bind:value={filters["numNodes"]["to"]}
-                        min="{currentRanges.numNodes.from}" max="{currentRanges.numNodes.to}" />
-                </FormGroup> -->
-
-                <RangeSelector on:change={handleNodesSlider}
+                <DoubleRangeSlider on:change={handleNodesSlider}
                     min={currentRanges.numNodes.from} max={currentRanges.numNodes.to}
-                    from={filters["numNodes"]["from"]} to={filters["numNodes"]["to"]}/>
+                    firstSlider={filters["numNodes"]["from"]} secondSlider={filters["numNodes"]["to"]}/>
             </Row>
         </Col>
     </Row>
@@ -531,14 +516,12 @@
                             {#each filters.statistics as stat, idx (stat)}
                             <tr>
                                 <td>{stat.name}</td>
+                                <td><input type="checkbox" bind:checked={stat.enabled}></td>
                                 <td>
-                                    <input type="checkbox" bind:checked={stat.enabled}>
-                                </td>
-                                <td>
-                                    <RangeSelector on:change={(e) => handleStatisticsSlider(stat, e)}
+                                    <DoubleRangeSlider on:change={(e) => handleStatisticsSlider(stat, e)}
                                         min={currentRanges.statistics[idx].from}
                                         max={currentRanges.statistics[idx].to}
-                                        from={stat.from} to={stat.to}/>
+                                        firstSlider={stat.from} secondSlider={stat.to}/>
                                 </td>
                             </tr>
                             {/each}
@@ -586,6 +569,16 @@
                 <span class="cc-tag badge rounded-pill {getColorForTag(tag)}">
                     {tag.tagType}: {tag.tagName}
                 </span>
+            {/each}
+        </div>
+    {/if}
+
+    {#if appliedFilters.statistics.some(stat => stat.enabled)}
+        <div>
+            Job Statistics:
+            {#each appliedFilters.statistics.filter(s => s.enabled) as stat}
+                <br>
+                {stat.name}: {stat.from} - {stat.to}
             {/each}
         </div>
     {/if}
