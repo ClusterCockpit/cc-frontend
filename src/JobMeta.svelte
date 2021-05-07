@@ -15,7 +15,7 @@
 
 <div>
     <div class="fw-bold">{job["jobId"]} ({job["clusterId"]})</div>
-    <div class="fst-italic">{job["userId"]}</div>
+    <div class="fst-italic">{job["userId"]} ({job["projectId"]})</div>
     <p>{job["numNodes"]} nodes</p>
     <div>Started at:</div>
     <p class="fw-bold">{job["startTime"]}</p>

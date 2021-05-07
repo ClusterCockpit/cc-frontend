@@ -46,6 +46,7 @@
                 from: 0, to: 0
             }
         ],
+        projectId: '',
         cluster: null,
         tags: {}
     };
@@ -73,8 +74,11 @@
                 + filters["duration"]["to"]["min"] * 60;
         filterItems.push({ duration: { from: from , to: to } });
 
-        if (filters["cluster"] != null)
-            filterItems.push({ clusterId: { eq: filters["cluster"] } });
+        if (filters.cluster != null)
+            filterItems.push({ clusterId: { eq: filters.cluster } });
+
+        if (filters.projectId)
+            filterItems.push({ projectId: { contains: filters.projectId } });
 
         let tags = Object.keys(filters["tags"]);
         if (tags.length > 0)
@@ -130,7 +134,6 @@
     const dispatch = createEventDispatcher();
 
     let tagFilterTerm = '';
-    let projectFilterTerm = '';
     let filteredTags = [];
     let currentRanges = {
         numNodes: { from: 0, to: 0 },
@@ -199,23 +202,42 @@
 
         currentRanges.numNodes = ranges.numNodes;
 
-        // function clamp(x, { from, to }) {
-        //     return x < from ? from : (x < to ? x : to);
-        // }
+        function clamp(x, { from, to }) {
+            return x < from ? from : (x < to ? x : to);
+        }
 
-        // TODO: Clamp values instead?
-        filters.numNodes.from = ranges.numNodes.from;
-        filters.numNodes.to = ranges.numNodes.to;
-        filters.startTime.from = fromRFC3339(ranges.startTime.from);
-        filters.startTime.to = fromRFC3339(ranges.startTime.to);
-        filters.duration.from = secondsToHours(ranges.duration.from);
-        filters.duration.to = secondsToHours(ranges.duration.to);
+        function clampTime(t, { from, to }) {
+            let min = Date.parse(from);
+            let max = Date.parse(to);
+            let x = Date.parse(toRFC3339(t));
+
+            return x < min
+                ? fromRFC3339(from)
+                : (x < max ? t : fromRFC3339(to));
+        }
+
+        function clampDuration(d, { from, to }) {
+            let x = d.hours * 3600 + d.min * 60;
+            return x < from
+                ? secondsToHours(from)
+                : (x < to ? d : secondsToHours(to));
+        }
+
+        filters.numNodes.from = clamp(filters.numNodes.from, ranges.numNodes);
+        filters.numNodes.to = clamp(filters.numNodes.to, ranges.numNodes);
+
+        filters.startTime.from = clampTime(filters.startTime.from, ranges.startTime);
+        filters.startTime.to = clampTime(filters.startTime.to, ranges.startTime);
+
+        filters.duration.from = clampDuration(filters.duration.from, ranges.duration);
+        filters.duration.to = clampDuration(filters.duration.to, ranges.duration);
 
         for (let i in filters.statistics) {
             let stat = filters.statistics[i];
-            stat.from = 0;
-            stat.to = getPeakValue(stat.metric);
-            currentRanges.statistics[i].to = getPeakValue(stat.metric);
+            let peak = getPeakValue(stat.metric);
+            stat.from = clamp(stat.from, { from: 0, to: peak });
+            stat.to = clamp(stat.to, { from: 0, to: peak });
+            currentRanges.statistics[i].to = peak;
         }
     }
 
@@ -251,7 +273,6 @@
 
     function handleReset( ) {
         tagFilterTerm = '';
-        projectFilterTerm = '';
         filters = deepCopy(defaultFilters);
         appliedFilters = defaultFilters;
         handleApply();
@@ -268,10 +289,6 @@
 
     function handleApply( ) {
         let filterItems = getFilterItems(filters);
-
-        if (projectFilterTerm)
-            filterItems.push({ projectId: { contains: projectFilterTerm } });
-
         appliedFilters = deepCopy(filters);
         dispatch("update", { filterItems });
     }
@@ -488,7 +505,7 @@
             <Row>
                 <Col>
                     <input type="text"
-                        bind:value={projectFilterTerm}
+                        bind:value={filters.projectId}
                         placeholder="Filter"
                         style="width: 100%;">
                 </Col>
@@ -552,17 +569,27 @@
             ? (clusters || []).map(c => c.clusterID).join(', ')
             : appliedFilters["cluster"]}
     </div>
-    <div>
-        Tags:
-        {#each Object.values(appliedFilters["tags"]) as tag}
+
+    {#if appliedFilters.projectId}
+        <div>
+            Project ID:
             <br>
-            <span class="cc-tag badge rounded-pill {getColorForTag(tag)}">
-                {tag.tagType}: {tag.tagName}
-            </span>
-        {:else}
-            -
-        {/each}
-    </div>
+            Contains: "{appliedFilters.projectId}"
+        </div>
+    {/if}
+
+    {#if Object.values(appliedFilters["tags"]).length > 0}
+        <div>
+            Tags:
+            {#each Object.values(appliedFilters["tags"]) as tag}
+                <br>
+                <span class="cc-tag badge rounded-pill {getColorForTag(tag)}">
+                    {tag.tagType}: {tag.tagName}
+                </span>
+            {/each}
+        </div>
+    {/if}
+
     <div>
         Nodes:
         <br>
