@@ -103,6 +103,7 @@
     import { createEventDispatcher, getContext } from "svelte";
     import { Col, Row, FormGroup, Button, Input,
              ListGroup, ListGroupItem, Card, Spinner } from 'sveltestrap';
+    import RangeSelector from './utils/RangeSelector.svelte';
     import { operationStore, query } from '@urql/svelte';
 
     function deepCopy(obj) {
@@ -131,7 +132,15 @@
     let tagFilterTerm = '';
     let projectFilterTerm = '';
     let filteredTags = [];
-    let currentRanges = { numNodes: { from: 0, to: 500 } };
+    let currentRanges = {
+        numNodes: { from: 0, to: 0 },
+        statistics: [
+            { from: 0, to: 0 },
+            { from: 0, to: 0 },
+            { from: 0, to: 0 },
+            { from: 0, to: 0 }
+        ]
+    };
     let appliedFilters = defaultFilters;
     let metricConfig = getContext('metric-config');
 
@@ -202,9 +211,11 @@
         filters.duration.from = secondsToHours(ranges.duration.from);
         filters.duration.to = secondsToHours(ranges.duration.to);
 
-        for (let stat of filters.statistics) {
+        for (let i in filters.statistics) {
+            let stat = filters.statistics[i];
             stat.from = 0;
             stat.to = getPeakValue(stat.metric);
+            currentRanges.statistics[i].to = getPeakValue(stat.metric);
         }
     }
 
@@ -264,6 +275,16 @@
         appliedFilters = deepCopy(filters);
         dispatch("update", { filterItems });
     }
+
+    function handleNodesSlider({ detail: { from, to } }) {
+        filters.numNodes.from = from;
+        filters.numNodes.to = to;
+    }
+
+    function handleStatisticsSlider(stat, { detail: { from, to } }) {
+        stat.from = from;
+        stat.to = to;
+    }
 </script>
 
 <style>
@@ -288,6 +309,15 @@
 
     table th, table td {
         border-bottom: none;
+    }
+    table thead tr th:nth-child(1) {
+        width: 9em;
+    }
+    table thead tr th:nth-child(2) {
+        width: 3em;
+    }
+    table tbody tr td:nth-child(1), table tbody tr td:nth-child(2) {
+        vertical-align: middle;
     }
 </style>
 
@@ -367,9 +397,9 @@
                     <h5>Number of nodes</h5>
                 </Col>
             </Row>
-            <p>Between</p>
+            <!-- <p>Between</p> -->
             <Row>
-                <FormGroup class="col">
+                <!-- <FormGroup class="col">
                     <Input type=number bind:value={filters["numNodes"]["from"]}
                         min="{currentRanges.numNodes.from}" max="{currentRanges.numNodes.to}" />
                     <Input type=range bind:value={filters["numNodes"]["from"]}
@@ -381,7 +411,11 @@
                         min="{currentRanges.numNodes.from}" max="{currentRanges.numNodes.to}" />
                     <Input type=range bind:value={filters["numNodes"]["to"]}
                         min="{currentRanges.numNodes.from}" max="{currentRanges.numNodes.to}" />
-                </FormGroup>
+                </FormGroup> -->
+
+                <RangeSelector on:change={handleNodesSlider}
+                    min={currentRanges.numNodes.from} max={currentRanges.numNodes.to}
+                    from={filters["numNodes"]["from"]} to={filters["numNodes"]["to"]}/>
             </Row>
         </Col>
     </Row>
@@ -473,22 +507,21 @@
                             <tr>
                                 <th>Statistic</th>
                                 <th>Enabled</th>
-                                <th>From</th>
-                                <th>To</th>
+                                <th>Range</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {#each filters.statistics as stat (stat)}
+                            {#each filters.statistics as stat, idx (stat)}
                             <tr>
                                 <td>{stat.name}</td>
                                 <td>
                                     <input type="checkbox" bind:checked={stat.enabled}>
                                 </td>
                                 <td>
-                                    <input type="number" bind:value={stat.from}>
-                                </td>
-                                <td>
-                                    <input type="number" bind:value={stat.to}>
+                                    <RangeSelector on:change={(e) => handleStatisticsSlider(stat, e)}
+                                        min={currentRanges.statistics[idx].from}
+                                        max={currentRanges.statistics[idx].to}
+                                        from={stat.from} to={stat.to}/>
                                 </td>
                             </tr>
                             {/each}
