@@ -1,5 +1,6 @@
 <!--
 Copyright (c) 2021 Michael Keller
+MIT License
 Originally created by Michael Keller (https://github.com/mhkeller/svelte-double-range-slider)
 Changes: remove dependency, text inputs, configurable value ranges, on:change event
 -->
@@ -17,8 +18,8 @@ Changes: remove dependency, text inputs, configurable value ranges, on:change ev
 	let values;
 	let start, end; /* Positions of sliders from 0 to 1 */
 	$: values = [firstSlider, secondSlider]; /* Avoid feedback loop */
-	$: start = (firstSlider - min) / (max - min);
-    $: end = (secondSlider - min) / (max - min);
+	$: start = clamp((firstSlider - min) / (max - min), 0., 1.);
+	$: end = clamp((secondSlider - min) / (max - min), 0., 1.);
 
 	let leftHandle;
 	let body;

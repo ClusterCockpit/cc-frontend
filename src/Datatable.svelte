@@ -93,8 +93,8 @@
            }
            count
          }
-     }
-     `, {filter: { list: defaultFilterItems }, sorting, paging});
+    }
+    `, {filter: { list: defaultFilterItems }, sorting, paging});
 
     query(jobQuery);
 
@@ -105,6 +105,8 @@
         filterItems = filterItems.filter(f => f.userId == null);
         if (userFilter)
             filterItems.push({ userId: { contains: userFilter }});
+
+        console.info('filters:', ...filterItems.map(f => Object.entries(f).flat()).flat());
 
         $jobQuery.variables.filter = { "list": filterItems };
     }
@@ -146,10 +148,11 @@
                     }
                 }
 
-                $jobQuery.variables.sorting = {
+                sorting = {
                     field: sortedColumns[key].field,
                     order: sortedColumns[key].order[sortedColumns[key].current]
                 };
+                $jobQuery.variables.sorting = sorting;
             } else {
                 sortedColumns[key].current = 2;
             }
@@ -227,6 +230,7 @@
 
 <Filter {showFilters}
     clusters={clusters}
+    sorting={sorting}
     filterRanges={filterRanges}
     on:update={handleFilter} />
 <div class="d-flex flex-row justify-content-between">
