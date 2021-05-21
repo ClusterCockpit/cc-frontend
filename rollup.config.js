@@ -29,54 +29,67 @@ function serve() {
 	};
 }
 
-export default {
-	input: 'src/main.js',
+const plugins = [
+	svelte({
+		compilerOptions: {
+			// enable run-time checks when not in production
+			dev: !production
+		}
+	}),
+
+	// If you have external dependencies installed from
+	// npm, you'll most likely need these plugins. In
+	// some cases you'll need additional configuration -
+	// consult the documentation for details:
+	// https://github.com/rollup/plugins/tree/master/packages/commonjs
+	resolve({
+		browser: true,
+		dedupe: ['svelte']
+	}),
+	commonjs(),
+
+	// In dev mode, call `npm run start` once
+	// the bundle has been generated
+	!production && serve(),
+
+	// Watch the `public` directory and refresh the
+	// browser on changes when not in production
+	!production && livereload('public'),
+
+	// If we're building for production (npm run build
+	// instead of npm run dev), minify
+	production && terser(),
+
+	replace({
+		"process.env.NODE_ENV": JSON.stringify("development"),
+		preventAssignment: true
+	})
+];
+
+const entrypoint = name => ({
+	input: `src/${name}.js`,
 	output: {
 		sourcemap: true,
 		format: 'iife',
 		name: 'app',
-		file: 'public/build/bundle.js'
+		file: `public/build/${name}.js`,
+
+		// Used so that the svelte components can be used
+		// with or without the ClusterCockpit PHP Backend:
+		intro:
+			"const GRAPHQL_BACKEND = `http://localhost:8080/query`;\n" +
+			"const JOBVIEW_URL = job => `/jobview.html?id=${job.id}&jobId=${job.jobId}&clusterId=${job.clusterId}`;\n"
 	},
 	plugins: [
-		svelte({
-			compilerOptions: {
-				// enable run-time checks when not in production
-				dev: !production
-			}
-		}),
+		...plugins,
+
 		// we'll extract any component CSS out into
 		// a separate file - better for performance
-		css({ output: 'bundle.css' }),
-
-		// If you have external dependencies installed from
-		// npm, you'll most likely need these plugins. In
-		// some cases you'll need additional configuration -
-		// consult the documentation for details:
-		// https://github.com/rollup/plugins/tree/master/packages/commonjs
-		resolve({
-			browser: true,
-			dedupe: ['svelte']
-		}),
-		commonjs(),
-
-		// In dev mode, call `npm run start` once
-		// the bundle has been generated
-		!production && serve(),
-
-		// Watch the `public` directory and refresh the
-		// browser on changes when not in production
-		!production && livereload('public'),
-
-		// If we're building for production (npm run build
-		// instead of npm run dev), minify
-		production && terser(),
-
-		replace({
-			"process.env.NODE_ENV": JSON.stringify("development"),
-			preventAssignment: true
-		}),
+		css({ output: `${name}.css` }),
 	],
 	watch: {
 		clearScreen: false
 	}
-};
+});
+
+export default [ entrypoint('joblist'), entrypoint('jobview') ];

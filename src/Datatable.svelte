@@ -53,8 +53,11 @@
         plotWidth = Math.floor((tableWidth - jobMetaWidth) / selectedMetrics.length - 10);
     }
 
-    initClient({ url: 'http://localhost:8080/query' }); // cc-jobarchive as Backend
-    // initClient({ url: 'http://localhost:8000/query/' }); // ClusterCockpit as Backend
+    initClient({
+        url: typeof GRAPHQL_BACKEND !== 'undefined'
+            ? GRAPHQL_BACKEND
+            : `${window.location.origin}/query`
+    });
 
     const metricUnits = {};
     const metricConfig = {};
@@ -75,12 +78,9 @@
 
     const jobQuery = operationStore(`
     query($filter: JobFilterList!, $sorting: OrderByInput!, $paging: PageRequest! ){
-       jobs(
-       filter: $filter
-       order: $sorting
-       page: $paging
-       ) {
+       jobs(filter: $filter, order: $sorting, page: $paging) {
            items {
+             id
              jobId
              userId
              projectId
@@ -269,7 +269,7 @@
                                 style="width: {plotWidth}px">
                                 {metric}
                                 {#if metricUnits[metric]}
-                                    ({metricUnits[metric]})
+                                    [{metricUnits[metric]}]
                                 {/if}
                             </th>
                         {/each}
