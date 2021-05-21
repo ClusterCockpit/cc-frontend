@@ -1,2 +1,9 @@
+import JobView from './JobView.svelte';
 
-console.log(jobInfos);
+const jobView = new JobView({
+    target: document.getElementById('svelte-app'),
+    props: {
+        /* Originally set in templates/jobViews/viewJob-svelte.html.twig */
+        jobInfos: jobInfos
+    }
+});
