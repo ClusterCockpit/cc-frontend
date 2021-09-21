@@ -2,32 +2,10 @@ import svelte from 'rollup-plugin-svelte';
 import replace from "@rollup/plugin-replace";
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
-import livereload from 'rollup-plugin-livereload';
 import { terser } from 'rollup-plugin-terser';
 import css from 'rollup-plugin-css-only';
 
 const production = !process.env.ROLLUP_WATCH;
-
-function serve() {
-	let server;
-
-	function toExit() {
-		if (server) server.kill(0);
-	}
-
-	return {
-		writeBundle() {
-			if (server) return;
-			server = require('child_process').spawn('npm', ['run', 'start', '--', '--dev'], {
-				stdio: ['ignore', 'inherit', 'inherit'],
-				shell: true
-			});
-
-			process.on('SIGTERM', toExit);
-			process.on('exit', toExit);
-		}
-	};
-}
 
 const plugins = [
 	svelte({
@@ -48,26 +26,14 @@ const plugins = [
 	}),
 	commonjs(),
 
-	// In dev mode, call `npm run start` once
-	// the bundle has been generated
-	!production && serve(),
-
-	// Watch the `public` directory and refresh the
-	// browser on changes when not in production
-	!production && livereload('public'),
-
-	// If we're building for production (npm run build
-	// instead of npm run dev), minify
-	production && terser(),
-
 	replace({
 		"process.env.NODE_ENV": JSON.stringify("development"),
 		preventAssignment: true
 	})
 ];
 
-const entrypoint = name => ({
-	input: `src/${name}.js`,
+const entrypoint = (name, path) => ({
+	input: path,
 	output: {
 		sourcemap: true,
 		format: 'iife',
@@ -77,8 +43,8 @@ const entrypoint = name => ({
 		// Used so that the svelte components can be used
 		// with or without the ClusterCockpit PHP Backend:
 		intro:
-			"const GRAPHQL_BACKEND = `http://localhost:8080/query`;\n" +
-			"const JOBVIEW_URL = job => `/jobview.html?id=${job.id}&jobId=${job.jobId}&clusterId=${job.clusterId}`;\n"
+			"const JOBVIEW_URL = job => `/job.html?id=${job.id}&jobId=${job.jobId}&clusterId=${job.clusterId}`;\n" +
+			"const USERVIEW_URL = user => `/user.html?userId=${user.userId}`;\n"
 	},
 	plugins: [
 		...plugins,
@@ -92,4 +58,11 @@ const entrypoint = name => ({
 	}
 });
 
-export default [ entrypoint('joblist'), entrypoint('jobview') ];
+export default [
+	entrypoint('jobs', 'src/JobList/entrypoint.js'),
+	entrypoint('job', 'src/JobView/entrypoint.js'),
+	entrypoint('users', 'src/UserList/entrypoint.js'),
+	entrypoint('user', 'src/UserView/entrypoint.js'),
+	entrypoint('analysis', 'src/AnalysisView/entrypoint.js')
+];
+

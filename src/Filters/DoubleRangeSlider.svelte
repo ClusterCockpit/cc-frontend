@@ -1,6 +1,5 @@
 <!--
 Copyright (c) 2021 Michael Keller
-MIT License
 Originally created by Michael Keller (https://github.com/mhkeller/svelte-double-range-slider)
 Changes: remove dependency, text inputs, configurable value ranges, on:change event
 -->
@@ -18,24 +17,43 @@ Changes: remove dependency, text inputs, configurable value ranges, on:change ev
 	let values;
 	let start, end; /* Positions of sliders from 0 to 1 */
 	$: values = [firstSlider, secondSlider]; /* Avoid feedback loop */
-	$: start = clamp((firstSlider - min) / (max - min), 0., 1.);
-	$: end = clamp((secondSlider - min) / (max - min), 0., 1.);
+	$: start = Math.max((firstSlider - min) / (max - min), 0);
+	$: end = Math.min((secondSlider - min) / (max - min), 1);
 
 	let leftHandle;
 	let body;
 	let slider;
+	let inputFieldFrom, inputFieldTo;
+
+	let timeoutId = null;
+	function queueChangeEvent() {
+		if (timeoutId !== null) {
+			clearTimeout(timeoutId);
+		}
+
+		timeoutId = setTimeout(() => {
+			timeoutId = null;
+
+			// Show selection but avoid feedback loop
+			if (inputFieldFrom.value != values[0].toString())
+				inputFieldFrom.value = values[0].toString();
+			if (inputFieldTo.value != values[1].toString())
+				inputFieldTo.value = values[1].toString();
+
+			dispatch('change', values);
+		}, 250);
+	}
 
 	function update() {
 		values = [
 			Math.floor(min + start  * (max - min)),
 			Math.floor(min + end * (max - min))
 		];
-		dispatch('change', values);
+		queueChangeEvent();
 	}
 
 	function inputChanged(idx, event) {
 		let val = Number.parseInt(event.target.value);
-		console.log(val, min, max);
 		if (Number.isNaN(val) || val < min) {
 			event.target.classList.add('bad');
 			return;
@@ -48,7 +66,7 @@ Changes: remove dependency, text inputs, configurable value ranges, on:change ev
 		else
 			end = clamp((val - min) / (max - min), 0., 1.);
 
-		dispatch('change', values);
+		queueChangeEvent();
 	}
 
 	function clamp(x, min, max) {
@@ -162,15 +180,13 @@ Changes: remove dependency, text inputs, configurable value ranges, on:change ev
 
 <div class="double-range-container">
 	<div class="header">
-		<input type="text" placeholder="from..."
-			on:input={(e) => inputChanged(0, e)}
-			bind:value={values[0]}/>
+		<input type="text" placeholder="from..." bind:this={inputFieldFrom}
+			on:input={(e) => inputChanged(0, e)} />
 
 		<span>Full Range: <b> {min} </b> - <b> {max} </b></span>
 
-		<input type="text" placeholder="to..."
-			on:input={(e) => inputChanged(1, e)}
-			bind:value={values[1]}/>
+		<input type="text" placeholder="to..." bind:this={inputFieldTo}
+			on:input={(e) => inputChanged(1, e)} />
 	</div>
 	<div class="slider" bind:this={slider}>
 		<div

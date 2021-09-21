@@ -7,17 +7,20 @@
     }
 </style>
 
-<script context="module">
-    /* TODO: Make all of this customizable... */
+<script>
+    import { onMount, onDestroy, getContext } from "svelte";
+    import { formatNumber } from "../Common/utils.js";
+    import uPlot from "uplot";
+
+    const clusterCockpitConfig = getContext('cc-config');
+
     const resizeSleepTime = 250;
     const peakLineColor = '#000000';
-    const lineWidth = 1 / window.devicePixelRatio;
-    const lineColors = [ '#00bfff', '#0000ff', '#ff00ff', '#ff0000', '#ff8000', '#ffff00', '#80ff00' ];
-    const backgroundColors = {
-        normal:  'rgba(255, 255, 255, 1.0)',
-        caution: 'rgba(255, 128,   0, 0.3)',
-        alert:   'rgba(255,   0,   0, 0.3)'
-    };
+    const lineWidth = clusterCockpitConfig.plot_general_lineWidth / window.devicePixelRatio;
+    const lineColors = clusterCockpitConfig.plot_general_colorscheme;
+    const backgroundColors = clusterCockpitConfig.plot_general_colorBackground === true
+        ? { normal:  'rgba(255, 255, 255, 1.0)', caution: 'rgba(255, 128, 0, 0.3)', alert: 'rgba(255, 0, 0, 0.3)' }
+        : null;
 
     function getTotalAvg(data) {
         let avg = 0;
@@ -25,6 +28,14 @@
             avg += series.statistics.avg;
 
         return avg / data.series.length;
+    }
+
+    function getTotalMax(data) {
+        let max = Number.NEGATIVE_INFINITY;
+        for (let series of data.series)
+            max = Math.max(max, series.statistics.max);
+
+        return max;
     }
 
     function getBackgroundColor(data, metricConfig) {
@@ -48,6 +59,13 @@
         return backgroundColors.normal;
     }
 
+    function getLineColor(i, n) {
+        if (n >= lineColors.length)
+            return lineColors[i % lineColors.length];
+        else
+            return lineColors[Math.floor((i / n) * lineColors.length)];
+    }
+
     function formatTime(val) {
         let h = Math.floor(val / 3600);
         let m = Math.floor((val % 3600) / 60);
@@ -66,11 +84,6 @@
 
         return incrs;
     }
-</script>
-
-<script>
-    import { onMount, onDestroy, getContext } from "svelte";
-    import uPlot from "uplot";
 
     export let metric;
     export let clusterId;
@@ -78,7 +91,8 @@
     export let width;
     export let height;
 
-    const metricConfig = getContext('metric-config')[clusterId][metric];
+    const metricConfig = getContext('metric-config')[clusterId]
+        && getContext('metric-config')[clusterId][metric];
 
     let plotWrapper;
     let uplot = null;
@@ -100,7 +114,7 @@
         plotSeries.push({
             scale: 'y',
             width: lineWidth,
-            stroke: lineColors[i % lineColors.length]
+            stroke: getLineColor(i, data.series.length)
         });
     }
 
@@ -119,7 +133,9 @@
             {
                 scale: 'y',
                 grid: { show: true },
-                labelFont: 'sans-serif'
+                labelFont: 'sans-serif',
+                values: (u, vals) =>
+                    vals.map(v => formatNumber(v))
             }
         ],
         padding: [0, 10, -20, -10],
@@ -130,7 +146,8 @@
     };
 
     if (metricConfig && metricConfig.peak) {
-        opts.scales.y.range = [0., metricConfig.peak * 1.1];
+        let max = Math.max(metricConfig.peak, getTotalMax(data));
+        opts.scales.y.range = [0., max * 1.1];
 
         opts.hooks.draw = [u => {
             let x0 = u.valToPos(0, 'x', true);
@@ -169,8 +186,10 @@
 
     let mounted = false;
     onMount(() => {
-        let bg = getBackgroundColor(data, metricConfig);
-        plotWrapper.style.backgroundColor = bg;
+        if (backgroundColors != null) {
+            let bg = getBackgroundColor(data, metricConfig);
+            plotWrapper.style.backgroundColor = bg;
+        }
 
         render();
         mounted = true;

@@ -2,20 +2,30 @@
     import  { Modal, ModalBody, ModalHeader,
               ModalFooter, Button, ListGroup } from 'sveltestrap';
     import { getContext } from 'svelte';
+    import { mutation } from '@urql/svelte';
 
-    export let metrics;
     export let selectedMetrics;
     export let isOpen;
+    export let configName = 'plot_list_selectedMetrics';
 
     const metricConfig = getContext('metric-config');
-    let newMetricsOrder;
-    let unorderedSelectedMetrics;
-    let columnHovering;
 
-    function selectedMetricsChanged() {
-        newMetricsOrder = [...metrics];
-        unorderedSelectedMetrics = [...selectedMetrics];
-    }
+    let columnHovering = null;
+
+    let metrics = new Set();
+    for (let cluster in metricConfig)
+        for (let metric in metricConfig[cluster])
+            metrics.add(metric);
+
+    let newMetricsOrder = [...metrics].filter(m => !selectedMetrics.includes(m));
+    newMetricsOrder.unshift(...selectedMetrics);
+    let unorderedSelectedMetrics = [...selectedMetrics];
+
+    const updateConfiguration = mutation({
+        query: `mutation($name: String!, $value: String!) {
+            updateConfiguration(name: $name, value: $value)
+        }`
+    });
 
     function columnsDragStart(event, i) {
         event.dataTransfer.effectAllowed = 'move';
@@ -37,13 +47,19 @@
     }
 
     function closeAndApply() {
-        metrics = [...newMetricsOrder];
-        selectedMetrics = metrics.filter(m =>
+        selectedMetrics = newMetricsOrder.filter(m =>
             unorderedSelectedMetrics.includes(m));
         isOpen = false;
-    }
 
-    $: selectedMetricsChanged(selectedMetrics);
+        updateConfiguration({
+                name: configName,
+                value: JSON.stringify(selectedMetrics)
+            })
+            .then(res => {
+                if (res.error)
+                    console.error(res.error);
+            });
+    }
 </script>
 
 <style>
@@ -79,7 +95,9 @@
                     {/if}
                     {metric}
                     <span style="float: right;">
-                        {Object.keys(metricConfig).filter(c => metricConfig[c][metric] != null).join(', ')}
+                        {Object.keys(metricConfig || {})
+                            .filter(c => metricConfig[c][metric] != null)
+                            .join(', ')}
                     </span>
                 </li>
             {/each}

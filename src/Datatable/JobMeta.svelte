@@ -1,5 +1,5 @@
 <script>
-    import { getColorForTag } from './utils.js';
+    import Tag from '../Common/Tag.svelte';
 
     export let job;
 
@@ -23,7 +23,7 @@
         ({job["clusterId"]})
     </div>
     <div class="fst-italic">
-        {job["userId"]}
+        <a href="/monitoring/user/{job["userId"]}" target="_blank">{job["userId"]}</a>
         {#if job["projectId"] && job["projectId"] != 'no project'}
             ({job["projectId"]})
         {/if}
@@ -35,9 +35,7 @@
     <p class="fw-bold">{formatDuration(job["duration"])}</p>
     <p>
         {#each job["tags"] as tag}
-            <span class="badge rounded-pill {getColorForTag(tag)}">
-                {tag.tagType}: {tag.tagName}
-            </span>
+            <Tag tag={tag}/>
         {/each}
     </p>
 </div>
