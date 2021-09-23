@@ -101,6 +101,10 @@
 
     $: dateSelected(rawStartTime, rawStopTime);
 
+    const getUserUrl = typeof USERVIEW_URL !== 'undefined'
+        ? USERVIEW_URL
+        : userId => `/monitoring/user/${userId}`;
+
     query(usersQuery);
 </script>
 
@@ -206,7 +210,7 @@
             {#each sortUsers($usersQuery.data.userStats, sorting, hideUsersWithNoJobs, usernameFilter) as user (user.userId)}
                 <tr>
                     <td>
-                        <a href="/monitoring/user/{user.userId}" target="_blank">
+                        <a href="{getUserUrl(user.userId)}" target="_blank">
                             {user.userId}
                         </a>
                     </td>

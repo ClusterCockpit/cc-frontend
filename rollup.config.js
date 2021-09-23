@@ -26,6 +26,10 @@ const plugins = [
 	}),
 	commonjs(),
 
+	// If we're building for production (npm run build
+	// instead of npm run dev), minify
+	production && terser(),
+
 	replace({
 		"process.env.NODE_ENV": JSON.stringify("development"),
 		preventAssignment: true
@@ -44,7 +48,8 @@ const entrypoint = (name, path) => ({
 		// with or without the ClusterCockpit PHP Backend:
 		intro:
 			"const JOBVIEW_URL = job => `/job.html?id=${job.id}&jobId=${job.jobId}&clusterId=${job.clusterId}`;\n" +
-			"const USERVIEW_URL = user => `/user.html?userId=${user.userId}`;\n"
+			"const USERVIEW_URL = userId => `/user.html?userId=${userId}`;\n" +
+			"const TAG_URL = tag => `/jobs.html?tagId=${tag.id}`;\n"
 	},
 	plugins: [
 		...plugins,
@@ -63,6 +68,6 @@ export default [
 	entrypoint('job', 'src/JobView/entrypoint.js'),
 	entrypoint('users', 'src/UserList/entrypoint.js'),
 	entrypoint('user', 'src/UserView/entrypoint.js'),
-	entrypoint('analysis', 'src/AnalysisView/entrypoint.js')
+	// entrypoint('analysis', 'src/AnalysisView/entrypoint.js')
 ];
 
