@@ -16,7 +16,7 @@
     }
 </style>
 
-<a target="_blank" href="{getTagUrl(tag.id)}">
+<a target="_blank" href="{getTagUrl(tag)}">
     <span class="badge bg-warning text-dark">{tag.tagType}: {tag.tagName}</span>
 </a>
 
