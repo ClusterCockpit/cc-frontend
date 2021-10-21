@@ -4,7 +4,6 @@
     const getTagUrl = typeof TAG_URL !== 'undefined'
         ? TAG_URL
         : tag => `/monitoring/user/${tag.id}`;
-
 </script>
 
 <style>
@@ -20,3 +19,4 @@
 <a target="_blank" href="{getTagUrl(tag.id)}">
     <span class="badge bg-warning text-dark">{tag.tagType}: {tag.tagName}</span>
 </a>
+

@@ -10,7 +10,7 @@
     export let selectedMetrics;
 
     const rawQuery = `
-        query($jobId: String!, $clusterId: String, $metrics: [String]!) {
+        query($jobId: String!, $clusterId: String!, $metrics: [String!]!) {
             jobMetrics(
                 jobId: $jobId,
                 clusterId: $clusterId,

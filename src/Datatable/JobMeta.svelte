@@ -1,5 +1,6 @@
 <script>
     import Tag from '../Common/Tag.svelte';
+    import { Badge } from 'sveltestrap';
 
     export let job;
 
@@ -27,7 +28,7 @@
         ({job["clusterId"]})
     </div>
     <div class="fst-italic">
-        <a href="{getUserUrl(job.userId)}" target="_blank">{job["userId"]}</a>
+		<a href="{getUserUrl(job.userId)}" target="_blank">{job["userId"]}</a>
         {#if job["projectId"] && job["projectId"] != 'no project'}
             ({job["projectId"]})
         {/if}
@@ -36,7 +37,14 @@
     <div>Started at:</div>
     <p class="fw-bold">{job["startTime"]}</p>
     <div>Duration:</div>
-    <p class="fw-bold">{formatDuration(job["duration"])}</p>
+    <p class="fw-bold">
+        {formatDuration(job["duration"])}
+        {#if job.state == 'running'}
+            <Badge color="success">Running</Badge>
+        {:else if job.state != 'completed'}
+            <Badge color="danger">{job.state}</Badge>
+        {/if}
+    </p>
     <p>
         {#each job["tags"] as tag}
             <Tag tag={tag}/>
