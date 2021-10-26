@@ -57,7 +57,7 @@
 
     const usersQuery = operationStore(`
     query($filter: [JobFilter!]!) {
-        aggregatedStatistics(aggregateOver: USER, filter: $filter) {
+        jobsStatistics(filter: $filter, groupBy: USER) {
             id
             totalJobs
             totalWalltime
@@ -209,7 +209,7 @@
                 </td>
             </tr>
         {:else}
-            {#each sortUsers($usersQuery.data.aggregatedStatistics, sorting, hideUsersWithNoJobs, usernameFilter) as user (user.id)}
+            {#each sortUsers($usersQuery.data.jobsStatistics, sorting, hideUsersWithNoJobs, usernameFilter) as user (user.id)}
                 <tr>
                     <td>
                         <a href="{getUserUrl(user.id)}" target="_blank">
