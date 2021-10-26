@@ -68,6 +68,6 @@ export default [
 	entrypoint('job', 'src/JobView/entrypoint.js'),
 	entrypoint('users', 'src/UserList/entrypoint.js'),
 	entrypoint('user', 'src/UserView/entrypoint.js'),
-	// entrypoint('analysis', 'src/AnalysisView/entrypoint.js')
+	entrypoint('analysis', 'src/AnalysisView/entrypoint.js')
 ];
 
