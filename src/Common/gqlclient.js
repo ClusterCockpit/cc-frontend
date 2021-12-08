@@ -13,11 +13,11 @@ export function initGraphQL(ccconfig) {
         url: typeof GRAPHQL_BACKEND !== 'undefined'
             ? GRAPHQL_BACKEND
             : `${window.location.origin}/query`,
-        fetchOptions: () => ({
+        fetchOptions: () => (jwt ? {
             headers: {
                 'Authorization': `Bearer ${jwt}`
             }
-        }),
+        } : {}),
         exchanges: [
             dedupExchange,
             expiringCacheExchange({

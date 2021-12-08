@@ -47,9 +47,11 @@ const entrypoint = (name, path) => ({
 		// Used so that the svelte components can be used
 		// with or without the ClusterCockpit PHP Backend:
 		intro:
-			"const JOBVIEW_URL = job => `/job.html?id=${job.id}&jobId=${job.jobId}&clusterId=${job.clusterId}`;\n" +
-			"const USERVIEW_URL = userId => `/user.html?userId=${userId}`;\n" +
-			"const TAG_URL = tag => `/jobs.html?tagId=${tag.id}`;\n"
+			process.env.CCFRONTEND_ROLLUP_INTRO != null
+				? process.env.CCFRONTEND_ROLLUP_INTRO
+				: "const JOBVIEW_URL = job => `/job.html?id=${job.id}&jobId=${job.jobId}&clusterId=${job.clusterId}`;\n" +
+				  "const USERVIEW_URL = userId => `/user.html?userId=${userId}`;\n" +
+				  "const TAG_URL = tag => `/jobs.html?tagId=${tag.id}`;\n"
 	},
 	plugins: [
 		...plugins,

@@ -1,5 +1,7 @@
 # cc-svelte-datatable
 
+[![Build](https://github.com/ClusterCockpit/cc-svelte-datatable/actions/workflows/build.yml/badge.svg)](https://github.com/ClusterCockpit/cc-svelte-datatable/actions/workflows/build.yml)
+
 A frontend for [ClusterCockpit](https://github.com/ClusterCockpit/ClusterCockpit) and [cc-jobarchive](https://github.com/ClusterCockpit/cc-jobarchive). Backend specific configuration can de done using the constants defined in the `intro` section in `./rollup.config.js`.
 
 Builds on:
