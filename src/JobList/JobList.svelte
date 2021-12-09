@@ -33,6 +33,14 @@
     if (filterPresets && filterPresets.isRunning != null)
         filterItems.push({ isRunning: filterPresets.isRunning });
 
+    if (filterPresets && filterPresets.projectId != null)
+        filterItems.push({ projectId: { eq: filterPresets.projectId } });
+
+    if (filterPresets && filterPresets.startTime != null)
+        filterItems.push({ startTime: {
+            from: filterPresets.startTime.from,
+            to:   filterPresets.startTime.to } });
+
     function filtersChanged(event) {
         if (event.detail && event.detail.filterItems) {
             filterItems = event.detail.filterItems;

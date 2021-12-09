@@ -30,8 +30,8 @@
     let appliedFilters;
     let matchedJobs = null;
     let selectedCluster = null;
-    let selectedClusterId = window.location.hash
-        ? window.location.hash.substring(1)
+    let selectedClusterId = filterPresets && filterPresets.clusterId
+        ? filterPresets.clusterId
         : null;
 
     let metricsInHistograms = clusterCockpitConfig.analysis_view_histogramMetrics
@@ -163,7 +163,7 @@
         }
 
         selectedCluster = $clustersQuery.clusters.find(c => c.clusterID == selectedClusterId);
-        window.location.hash = `#${selectedClusterId}`;
+        window.location.search = `?cluster=${selectedClusterId}`
         updateQueries(filterItems);
     }
 

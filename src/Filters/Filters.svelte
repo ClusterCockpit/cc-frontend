@@ -286,6 +286,11 @@
             filters.cluster = filterPresets.clusterId;
         }
 
+        if (filterPresets && filterPresets.projectId != null) {
+            appliedFilters.projectId = filterPresets.projectId;
+            filters.projectId = filterPresets.projectId;
+        }
+
         if (filterPresets && filterPresets.isRunning != null) {
             appliedFilters.isRunning = filterPresets.isRunning;
             filters.isRunning = filterPresets.isRunning;
