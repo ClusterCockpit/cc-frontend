@@ -49,9 +49,9 @@ const entrypoint = (name, path) => ({
 		intro:
 			process.env.CCFRONTEND_ROLLUP_INTRO != null
 				? process.env.CCFRONTEND_ROLLUP_INTRO
-				: "const JOBVIEW_URL = job => `/job.html?id=${job.id}&jobId=${job.jobId}&clusterId=${job.clusterId}`;\n" +
-				  "const USERVIEW_URL = userId => `/user.html?userId=${userId}`;\n" +
-				  "const TAG_URL = tag => `/jobs.html?tagId=${tag.id}`;\n"
+				: "const JOBVIEW_URL = job => `/monitoring/job/${job.id}`;\n"+
+				  "const USERVIEW_URL = user => `/monitoring/user/${user}`;\n"+
+				  "const TAG_URL = tag => `/monitoring/jobs/?tag=${tag.id}`;\n"
 	},
 	plugins: [
 		...plugins,
@@ -66,12 +66,17 @@ const entrypoint = (name, path) => ({
 });
 
 export default [
-	entrypoint('jobs', 'src/JobList/entrypoint.js'),
-	entrypoint('job', 'src/JobView/entrypoint.js'),
-	entrypoint('users', 'src/UserList/entrypoint.js'),
-	entrypoint('user', 'src/UserView/entrypoint.js'),
-	entrypoint('analysis', 'src/AnalysisView/entrypoint.js'),
-	entrypoint('systems', 'src/SystemView/entrypoint.js'),
-	entrypoint('node', 'src/NodeView/entrypoint.js')
+	entrypoint('jobs', 'src/v2/jobs.entrypoint.js'),
+	entrypoint('user', 'src/v2/user.entrypoint.js'),
+	entrypoint('list', 'src/v2/list.entrypoint.js'),
+	entrypoint('job', 'src/v2/job.entrypoint.js')
+
+	// entrypoint('jobs', 'src/JobList/entrypoint.js'),
+	// entrypoint('job', 'src/JobView/entrypoint.js'),
+	// entrypoint('users', 'src/UserList/entrypoint.js'),
+	// entrypoint('user', 'src/UserView/entrypoint.js'),
+	// entrypoint('analysis', 'src/AnalysisView/entrypoint.js'),
+	// entrypoint('systems', 'src/SystemView/entrypoint.js'),
+	// entrypoint('node', 'src/NodeView/entrypoint.js')
 ];
 

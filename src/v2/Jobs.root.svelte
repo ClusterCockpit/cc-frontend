@@ -1,0 +1,74 @@
+<script>
+    import { onMount, getContext } from 'svelte'
+    import { init } from './utils.js'
+    import { Row, Col, Button, Icon } from 'sveltestrap'
+    import Filters from './filters/Filters.svelte'
+    import JobList from './joblist/JobList.svelte'
+    import Refresher from './joblist/Refresher.svelte'
+    import Sorting from './joblist/SortSelection.svelte'
+    import MetricSelection from './MetricSelection.svelte'
+    import UserOrProject from './filters/UserOrProject.svelte'
+
+    const { } = init()
+
+    const ccconfig = getContext('cc-config')
+
+    export let filterPresets
+
+    let filters, jobList
+    let sorting = { field: 'startTime', order: 'DESC' }, isSortingOpen = false
+    let metrics = ccconfig.plot_list_selectedMetrics, isMetricsSelectionOpen = false
+
+    // The filterPresets are handled by the Filters component,
+    // so we need to wait for it to be ready before we can start a query.
+    // This is also why JobList component starts out with a paused query.
+    onMount(() => filters.update())
+</script>
+
+<Row>
+    <Col xs="auto">
+        <Button
+            outline color="primary"
+            on:click={() => (isSortingOpen = true)}>
+            <Icon name="sort-up"/> Sorting
+        </Button>
+
+        <Button
+            outline color="primary"
+            on:click={() => (isMetricsSelectionOpen = true)}>
+            <Icon name="graph-up"/> Metrics
+        </Button>
+    </Col>
+    <Col xs="auto">
+        <Filters
+            filterPresets={filterPresets}
+            bind:this={filters}
+            on:update={({ detail }) => jobList.update(detail.filters)} />
+    </Col>
+</Row>
+<br/>
+<Row>
+    <Col xs="9">
+        <UserOrProject on:update={({ detail }) => filters.update(detail)}/>
+    </Col>
+    <Col xs="3" style="margin-left: auto;">
+        <Refresher on:reload={() => jobList.update()} />
+    </Col>
+</Row>
+<br/>
+<Row>
+    <Col>
+        <JobList
+            bind:metrics={metrics}
+            bind:sorting={sorting}
+            bind:this={jobList} />
+    </Col>
+</Row>
+
+<Sorting
+    bind:sorting={sorting}
+    bind:isOpen={isSortingOpen} />
+
+<MetricSelection configName="plot_list_selectedMetrics"
+    bind:metrics={metrics}
+    bind:isOpen={isMetricsSelectionOpen} />

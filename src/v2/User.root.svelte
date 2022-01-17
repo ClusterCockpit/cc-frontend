@@ -1,0 +1,148 @@
+<script>
+    import { onMount, getContext } from 'svelte'
+    import { init } from './utils.js'
+    import { Table, Row, Col, Button, Icon, Card, Spinner } from 'sveltestrap'
+    import { operationStore, query } from '@urql/svelte'
+    import Filters from './filters/Filters.svelte'
+    import JobList from './joblist/JobList.svelte'
+    import Sorting from './joblist/SortSelection.svelte'
+    import Refresher from './joblist/Refresher.svelte'
+    import Histogram from './plots/Histogram.svelte'
+    import MetricSelection from './MetricSelection.svelte'
+
+    const { } = init()
+
+    const ccconfig = getContext('cc-config')
+
+    export let user
+    export let filterPresets
+
+    let filters, jobList
+    let sorting = { field: 'startTime', order: 'DESC' }, isSortingOpen = false
+    let metrics = ccconfig.plot_list_selectedMetrics, isMetricsSelectionOpen = false
+    let w1, w2, histogramHeight = 250
+
+    const stats = operationStore(`
+    query($filter: [JobFilter!]!) {
+        jobsStatistics(filter: $filter) {
+            totalJobs
+            shortJobs
+            totalWalltime
+            totalCoreHours
+            histWalltime { count, value }
+            histNumNodes { count, value }
+        }
+    }
+    `, {
+        filter: []
+    }, {
+        pause: true
+    })
+
+    query(stats)
+
+    onMount(() => filters.update())
+</script>
+
+<Row>
+    <Col xs="auto">
+        <Button
+            outline color="primary"
+            on:click={() => (isSortingOpen = true)}>
+            <Icon name="sort-up"/> Sorting
+        </Button>
+
+        <Button
+            outline color="primary"
+            on:click={() => (isMetricsSelectionOpen = true)}>
+            <Icon name="graph-up"/> Metrics
+        </Button>
+    </Col>
+    <Col xs="auto">
+        <Filters
+            filterPresets={filterPresets}
+            bind:this={filters}
+            on:update={({ detail }) => {
+                let filters = [...detail.filters, { user: { eq: user.username } }]
+                $stats.variables = { filter: filters }
+                $stats.context.pause = false
+                $stats.reexecute()
+                jobList.update(filters)
+            }} />
+    </Col>
+    <Col xs="auto" style="margin-left: auto;">
+        <Refresher on:reload={() => jobList.update()} />
+    </Col>
+</Row>
+<br/>
+<Row>
+    {#if $stats.error}
+        <Col>
+            <Card body color="danger">{$stats.error.message}</Card>
+        </Col>
+    {:else if !$stats.data}
+        <Col>
+            <Spinner secondary />
+        </Col>
+    {:else}
+        <Col>
+            <Table>
+                <tbody>
+                    <tr>
+                        <th scope="row">Username</th>
+                        <td>{user.username}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Total Jobs</th>
+                        <td>{$stats.data.jobsStatistics[0].totalJobs}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Short Jobs</th>
+                        <td>{$stats.data.jobsStatistics[0].shortJobs}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Total Walltime</th>
+                        <td>{$stats.data.jobsStatistics[0].totalWalltime}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Total Core Hours</th>
+                        <td>{$stats.data.jobsStatistics[0].totalCoreHours}</td>
+                    </tr>
+                </tbody>
+            </Table>
+        </Col>
+        <div class="col" style="text-align: center;" bind:clientWidth={w1}>
+            <b>Walltime</b>
+            {#key $stats.data.jobsStatistics[0].histWalltime}
+                <Histogram
+                    data={$stats.data.jobsStatistics[0].histWalltime}
+                    width={w1} height={histogramHeight} />
+            {/key}
+        </div>
+        <div class="col" style="text-align: center;" bind:clientWidth={w2}>
+            <b>Number of Nodes</b>
+            {#key $stats.data.jobsStatistics[0].histNumNodes}
+                <Histogram
+                    data={$stats.data.jobsStatistics[0].histNumNodes}
+                    width={w2} height={histogramHeight} />
+            {/key}
+        </div>
+    {/if}
+</Row>
+<br/>
+<Row>
+    <Col>
+        <JobList
+            bind:metrics={metrics}
+            bind:sorting={sorting}
+            bind:this={jobList} />
+    </Col>
+</Row>
+
+<Sorting
+    bind:sorting={sorting}
+    bind:isOpen={isSortingOpen} />
+
+<MetricSelection configName="plot_list_selectedMetrics"
+    bind:metrics={metrics}
+    bind:isOpen={isMetricsSelectionOpen} />
