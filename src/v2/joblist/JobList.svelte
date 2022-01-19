@@ -109,7 +109,7 @@
                             <Spinner secondary />
                         </td>
                     </tr>
-                {:else if $jobs.data}
+                {:else if $jobs.data && $initialized}
                     {#each $jobs.data.jobs.items as job (job)}
                         <JobListRow
                             job={job}

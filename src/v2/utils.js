@@ -176,3 +176,38 @@ export function groupByScope(jobMetrics) {
 
     return [...metrics.values()]
 }
+
+const scopeGranularity = {
+    "node": 10,
+    "socket": 5,
+    "accelerator": 5,
+    "core": 2,
+    "hwthread": 1
+};
+
+export function maxScope(scopes) {
+    console.assert(scopes.length > 0 && scopes.every(x => scopeGranularity[x] != null))
+    let sm = scopes[0], gran = scopeGranularity[scopes[0]]
+    for (let scope of scopes) {
+        let otherGran = scopeGranularity[scope]
+        if (otherGran > gran) {
+            sm = scope
+            gran = otherGran
+        }
+    }
+    return sm
+}
+
+export function minScope(scopes) {
+    console.assert(scopes.length > 0 && scopes.every(x => scopeGranularity[x] != null))
+    let sm = scopes[0], gran = scopeGranularity[scopes[0]]
+    for (let scope of scopes) {
+        let otherGran = scopeGranularity[scope]
+        if (otherGran < gran) {
+            sm = scope
+            gran = otherGran
+        }
+    }
+    return sm
+}
+

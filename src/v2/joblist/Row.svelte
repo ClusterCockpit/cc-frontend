@@ -14,6 +14,7 @@
     import { Card, Spinner } from 'sveltestrap'
     import MetricPlot from '../plots/MetricPlot.svelte'
     import JobInfo from './JobInfo.svelte'
+    import { maxScope } from '../utils.js'
 
     export let job
     export let metrics
@@ -42,10 +43,14 @@
         scopes
     })
 
-    // TODO/FIXME: select the right scope as well!
+    const selectScope = (jobMetrics) => jobMetrics.reduce(
+        (a, b) => maxScope([a.metric.scope, b.metric.scope]) == a.metric.scope
+            ? (job.numNodes > 1 ? a : b)
+            : (job.numNodes > 1 ? b : a), jobMetrics[0])
+
     const sortAndSelectScope = (jobMetrics) => metrics
         .map(name => jobMetrics.filter(jobMetric => jobMetric.name == name))
-        .map(jobMetrics => jobMetrics.length > 0 ? jobMetrics[0] : null)
+        .map(jobMetrics => jobMetrics.length > 0 ? selectScope(jobMetrics) : null)
 
     $: metricsQuery.variables = { id: job.id, metrics, scopes }
 
@@ -76,7 +81,9 @@
                 <MetricPlot
                     width={plotWidth}
                     height={plotHeight}
-                    data={metric.metric}
+                    timestep={metric.metric.timestep}
+                    series={metric.metric.series}
+                    statisticsSeries={metric.metric.statisticsSeries}
                     metric={metric.name}
                     cluster={cluster} />
             {:else}

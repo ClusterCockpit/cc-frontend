@@ -77,6 +77,8 @@
             items.push({ tags: filters.tags })
         if (filters.duration.from || filters.duration.to)
             items.push({ duration: { from: filters.duration.from, to: filters.duration.to } })
+        if (filters.jobId)
+            items.push({ jobId: { eq: filters.jobId } })
         if (filters.numNodes.from != null || filters.numNodes.to != null)
             items.push({ numNodes: { from: filters.numNodes.from, to: filters.numNodes.to } })
         if (filters.numHWThreads.from != null || filters.numHWThreads.to != null)

@@ -1,7 +1,7 @@
 <script>
     import { init, groupByScope } from './utils.js'
     import { operationStore, query } from '@urql/svelte'
-    import { Row, Col, Card } from 'sveltestrap'
+    import { Row, Col, Card, Spinner } from 'sveltestrap'
     import PlotTable from './PlotTable.svelte'
     import Metric from './Metric.svelte'
     import PolarPlot from './plots/Polar.svelte'
@@ -9,6 +9,7 @@
     import JobInfo from './joblist/JobInfo.svelte'
     import TagManagement from './TagManagement.svelte'
     import Zoom from './Zoom.svelte'
+    import StatsTable from './StatsTable.svelte'
     import { getContext } from 'svelte'
 
     export let dbid
@@ -62,6 +63,8 @@
             <Card body color="danger">{$job.error.message}</Card>
         {:else if $job.data}
             <JobInfo job={$job.data.job} jobTags={jobTags}/>
+        {:else}
+            <Spinner secondary/>
         {/if}
     </Col>
     {#if $jobMetrics.data && $job.data && $initialized}
@@ -115,6 +118,14 @@
                     atAllScopes={item.map(x => x.metric)}
                     width={width}/>
             </PlotTable>
+        {/if}
+    </Col>
+</Row>
+<br/>
+<Row>
+    <Col>
+        {#if $initialized && $jobMetrics.data && $job.data}
+            <StatsTable job={$job.data.job} jobMetrics={$jobMetrics.data.jobMetrics} />
         {/if}
     </Col>
 </Row>

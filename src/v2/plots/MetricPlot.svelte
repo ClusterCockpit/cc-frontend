@@ -1,13 +1,18 @@
 <!-- 
     @component
 
+    Only width/height should change reactively.
+
     Properties:
-    - width:          Number
-    - height:         Number
-    - data:           GraphQL.JobMetric (Must be constant after initialization!)
-    - cluster:        GraphQL.Cluster
-    - metric:         String
-    - useStatsSeries: Boolean
+    - width:            Number
+    - height:           Number
+    - timestep:         Number
+    - series:           [GraphQL.Series]
+    - statisticsSeries: [GraphQL.StatisticsSeries]
+    - cluster:          GraphQL.Cluster
+    - metric:           String
+    - useStatsSeries:   Boolean
+
     Functions:
     - setTimeRange(from, to): Void
 
@@ -20,15 +25,17 @@
 
     export let width
     export let height
-    export let data
+    export let timestep
+    export let series
+    export let statisticsSeries
     export let cluster
     export let metric
     export let useStatsSeries = null
 
     if (useStatsSeries == null)
-        useStatsSeries = data.statisticsSeries != null
+        useStatsSeries = statisticsSeries != null
 
-    if (useStatsSeries == false && data.series == null)
+    if (useStatsSeries == false && series == null)
         useStatsSeries = true
 
     const metricConfig = getContext('metrics')(cluster, metric)
@@ -52,7 +59,7 @@
 
     function timeIncrs() {
         let incrs = []
-        for (let t = data.timestep; t < maxX; t *= 10)
+        for (let t = timestep; t < maxX; t *= 10)
             incrs.push(t, t * 2, t * 3, t * 5)
 
         return incrs
@@ -61,14 +68,14 @@
     function backgroundColor() {
         if (clusterCockpitConfig.plot_general_colorBackground == false
             || !metricConfig
-            || !(data.series && data.series.every(s => s.statistics != null)))
+            || !(series && series.every(s => s.statistics != null)))
             return backgroundColors.normal
 
         let cond = metricConfig.alert < metricConfig.caution
             ? (a, b) => a <= b
             : (a, b) => a >= b
 
-        let avg = data.series.reduce((sum, series) => sum + series.statistics.avg) / data.series.length
+        let avg = series.reduce((sum, series) => sum + series.statistics.avg) / series.length
 
         if (Number.isNaN(avg))
             return backgroundColors.normal
@@ -90,38 +97,38 @@
     }
 
     const longestSeries = useStatsSeries
-        ? data.statisticsSeries.mean.length
-        : data.series.reduce((n, series) => Math.max(n, series.data.length), 0)
-    const maxX = longestSeries * data.timestep
+        ? statisticsSeries.mean.length
+        : series.reduce((n, series) => Math.max(n, series.data.length), 0)
+    const maxX = longestSeries * timestep
     const maxY = metricConfig != null
         ? useStatsSeries
-            ? (data.statisticsSeries.max.reduce((max, x) => Math.max(max, x), metricConfig.peak) || metricConfig.peak)
-            : (data.series.reduce((max, series) => Math.max(max, series.statistics?.max), metricConfig.peak) || metricConfig.peak)
+            ? (statisticsSeries.max.reduce((max, x) => Math.max(max, x), metricConfig.peak) || metricConfig.peak)
+            : (series.reduce((max, series) => Math.max(max, series.statistics?.max), metricConfig.peak) || metricConfig.peak)
         : null
     const plotSeries = [{}]
     const plotData = [new Array(longestSeries)]
     for (let i = 0; i < longestSeries; i++)
-        plotData[0][i] = i * data.timestep
+        plotData[0][i] = i * timestep
 
     let plotBands = undefined
     if (useStatsSeries) {
-        plotData.push(data.statisticsSeries.min)
-        plotData.push(data.statisticsSeries.mean)
-        plotData.push(data.statisticsSeries.max)
+        plotData.push(statisticsSeries.min)
+        plotData.push(statisticsSeries.max)
+        plotData.push(statisticsSeries.mean)
+        plotSeries.push({ scale: 'y', width: lineWidth, stroke: 'red' })
         plotSeries.push({ scale: 'y', width: lineWidth, stroke: 'green' })
         plotSeries.push({ scale: 'y', width: lineWidth, stroke: 'black' })
-        plotSeries.push({ scale: 'y', width: lineWidth, stroke: 'red' })
         plotBands = [
-            { series: [3,2], fill: 'rgba(255,0,0,0.1)' },
-            { series: [2,1], fill: 'rgba(0,255,0,0.1)' }
+            { series: [2,3], fill: 'rgba(0,255,0,0.1)' },
+            { series: [3,1], fill: 'rgba(255,0,0,0.1)' }
         ];
     } else {
-        for (let i = 0; i < data.series.length; i++) {
-            plotData.push(data.series[i].data)
+        for (let i = 0; i < series.length; i++) {
+            plotData.push(series[i].data)
             plotSeries.push({
                 scale: 'y',
                 width: lineWidth,
-                stroke: lineColor(i, data.series.length)
+                stroke: lineColor(i, series.length)
             })
         }
     }

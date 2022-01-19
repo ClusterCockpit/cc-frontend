@@ -15,6 +15,7 @@
     export let metrics
     export let isOpen
     export let configName
+    export let allMetrics = null
 
     const clusters = getContext('clusters'),
           onInit = getContext('on-init')
@@ -23,10 +24,12 @@
     let unorderedMetrics = [...metrics]
 
     onInit(() => {
-        let allMetrics = new Set()
-        for (let cluster of clusters)
-            for (let metric of cluster.metricConfig)
-                allMetrics.add(metric.name)
+        if (allMetrics == null) {
+            allMetrics = new Set()
+            for (let cluster of clusters)
+                for (let metric of cluster.metricConfig)
+                    allMetrics.add(metric.name)
+        }
 
         newMetricsOrder = [...allMetrics].filter(m => !metrics.includes(m))
         newMetricsOrder.unshift(...metrics)
