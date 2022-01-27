@@ -33,15 +33,16 @@
         projectMatch: filterPresets.projectMatch || 'contains',
         userMatch:    filterPresets.userMatch    || 'contains',
 
-        cluster:   filterPresets.cluster   || null,
-        partition: filterPresets.partition || null,
-        states:    filterPresets.states    || filterPresets.state ? [filterPresets.state] : allJobStates,
-        startTime: filterPresets.startTime || { from: null, to: null },
-        tags:      filterPresets.tags      || [],
-        duration:  filterPresets.duration  || { from: null, to: null },
-        jobId:     filterPresets.jobId     || '',
-        user:      filterPresets.user      || '',
-        project:   filterPresets.project   || '',
+        cluster:    filterPresets.cluster    || null,
+        partition:  filterPresets.partition  || null,
+        states:     filterPresets.states     || filterPresets.state ? [filterPresets.state] : allJobStates,
+        startTime:  filterPresets.startTime  || { from: null, to: null },
+        tags:       filterPresets.tags       || [],
+        duration:   filterPresets.duration   || { from: null, to: null },
+        jobId:      filterPresets.jobId      || '',
+        arrayJobId: filterPresets.arrayJobId || null,
+        user:       filterPresets.user       || '',
+        project:    filterPresets.project    || '',
 
         numNodes:         filterPresets.numNodes         || { from: null, to: null },
         numHWThreads:     filterPresets.numHWThreads     || { from: null, to: null },
@@ -79,6 +80,8 @@
             items.push({ duration: { from: filters.duration.from, to: filters.duration.to } })
         if (filters.jobId)
             items.push({ jobId: { eq: filters.jobId } })
+        if (filters.arrayJobId != null)
+            items.push({ arrayJobId: filters.arrayJobId })
         if (filters.numNodes.from != null || filters.numNodes.to != null)
             items.push({ numNodes: { from: filters.numNodes.from, to: filters.numNodes.to } })
         if (filters.numHWThreads.from != null || filters.numHWThreads.to != null)

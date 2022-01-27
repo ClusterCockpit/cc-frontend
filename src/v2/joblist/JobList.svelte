@@ -58,10 +58,11 @@
 
     // (Re-)query and optionally set new filters.
     export function update(filters) {
-        if (filters != null)
+        if (filters != null) {
             $jobs.variables.filter = filters
+            console.log('filters:', ...filters.map(f => Object.entries(f)).flat(2))
+        }
 
-        console.log('filters:', ...filters.map(f => Object.entries(f)).flat(2))
         $jobs.context.pause = false
         $jobs.reexecute({ requestPolicy: 'network-only' })
     }

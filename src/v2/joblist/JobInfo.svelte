@@ -32,6 +32,12 @@
         <a href="/monitoring/job/{job.id}" target="_blank">{job.jobId}</a> ({job.cluster})
     </div>
 
+    {#if job.arrayJobId}
+        <p>
+            Array Job <a href="/monitoring/jobs/?arrayJobId={job.arrayJobId}&cluster={job.cluster}" target="_blank">#{job.arrayJobId}</a>
+        </p>
+    {/if}
+
     <div class="fst-italic">
         <a href="/monitoring/user/{job.user}" target="_blank">{job.user}</a>
         {#if job.project && job.project != 'no project'}
