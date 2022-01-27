@@ -54,6 +54,7 @@ export function init(extraInitQuery = '') {
                 flopRateScalar
                 flopRateSimd
                 memoryBandwidth
+                topology { accelerators { id } }
             }
         }
         tags { id, name, type }

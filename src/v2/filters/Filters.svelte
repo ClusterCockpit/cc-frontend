@@ -131,7 +131,7 @@
                     <Icon name="tags"/> Tags
                 </DropdownItem>
                 <DropdownItem on:click={() => (isResourcesOpen = true)}>
-                    <Icon name="hdd-stack"/> Nodes/HWThreads/Accelerators
+                    <Icon name="hdd-stack"/> Nodes/Accelerators
                 </DropdownItem>
                 <DropdownItem on:click={() => (isStatsOpen = true)}>
                     <Icon name="bar-chart" on:click={() => (isStatsOpen = true)}/> Statistics

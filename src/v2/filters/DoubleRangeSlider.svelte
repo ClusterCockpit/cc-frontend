@@ -45,9 +45,9 @@ Changes: remove dependency, text inputs, configurable value ranges, on:change ev
 			timeoutId = null;
 
 			// Show selection but avoid feedback loop
-			if (inputFieldFrom.value != values[0].toString())
+			if (values[0] != null && inputFieldFrom.value != values[0].toString())
 				inputFieldFrom.value = values[0].toString();
-			if (inputFieldTo.value != values[1].toString())
+			if (values[1] != null && inputFieldTo.value != values[1].toString())
 				inputFieldTo.value = values[1].toString();
 
 			dispatch('change', values);

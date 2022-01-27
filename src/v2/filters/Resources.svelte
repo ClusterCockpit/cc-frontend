@@ -20,33 +20,29 @@
         || pendingNumHWThreads.from != numHWThreads.from || pendingNumHWThreads.to != numHWThreads.to
         || pendingNumAccelerators.from != numAccelerators.from || pendingNumAccelerators.to != numAccelerators.to
 
+    const findMaxNumAccels = clusters => clusters.reduce((max, cluster) => Math.max(max,
+        cluster.partitions.reduce((max, partition) => Math.max(max, partition.topology.accelerators?.length || 0), 0)), 0)
+
     let minNumNodes = 1, maxNumNodes = 0, minNumHWThreads = 1, maxNumHWThreads = 0, minNumAccelerators = 0, maxNumAccelerators = 0
     $: {
         if ($initialized) {
+
+
+
             if (cluster != null) {
-                const ranges = clusters.find(c => c.name == cluster).filterRanges
-                minNumNodes = ranges.numNodes.from
-                maxNumNodes = ranges.numNodes.to
-                // minNumHWThreads = ranges.numHWThreads.from
-                // maxNumHWThreads = ranges.numHWThreads.to
-                // minNumAccelerators = ranges.numAccelerators.from
-                // maxNumAccelerators = ranges.numAccelerators.to
+                const { filterRanges, partitions } = clusters.find(c => c.name == cluster).
+                minNumNodes = filterRanges.numNodes.from
+                maxNumNodes = filterRanges.numNodes.to
+                maxNumAccelerators = findMaxNumAccels([{ partitions }])
             } else if (clusters.length > 0) {
-                let r = clusters[0].filterRanges
-                minNumNodes = r.numNodes.from
-                maxNumNodes = r.numNodes.to
-                // minNumHWThreads = r.numHWThreads.from
-                // maxNumHWThreads = r.numHWThreads.to
-                // minNumAccelerators = r.numAccelerators.from
-                // maxNumAccelerators = r.numAccelerators.to
+                const { filterRanges } = clusters[0]
+                minNumNodes = filterRanges.numNodes.from
+                maxNumNodes = filterRanges.numNodes.to
+                maxNumAccelerators = findMaxNumAccels(clusters)
                 for (let cluster of clusters) {
-                    let r = cluster.filterRanges
-                    minNumNodes = Math.min(minNumNodes, r.numNodes.from)
-                    maxNumNodes = Math.max(maxNumNodes, r.numNodes.to)
-                    // minNumHWThreads = Math.min(minNumHWThreads, r.numHWThreads.from)
-                    // maxNumHWThreads = Math.max(maxNumHWThreads, r.numHWThreads.to)
-                    // minNumAccelerators = Math.min(minNumAccelerators, r.numAccelerators.from)
-                    // maxNumAccelerators = Math.max(maxNumAccelerators, r.numAccelerators.to)
+                    const { filterRanges } = cluster
+                    minNumNodes = Math.min(minNumNodes, filterRanges.numNodes.from)
+                    maxNumNodes = Math.max(maxNumNodes, filterRanges.numNodes.to)
                 }
             }
         }
@@ -72,13 +68,13 @@
         <!-- <DoubleRangeSlider
             on:change={({ detail }) => (pendingNumHWThreads = { from: detail[0], to: detail[1] })}
             min={minNumHWThreads} max={maxNumHWThreads}
-            firstSlider={pendingNumHWThreads.from} secondSlider={pendingNumHWThreads.to} />
+            firstSlider={pendingNumHWThreads.from} secondSlider={pendingNumHWThreads.to} /> -->
         {#if maxNumAccelerators != null && maxNumAccelerators > 1}
             <DoubleRangeSlider
                 on:change={({ detail }) => (pendingNumAccelerators = { from: detail[0], to: detail[1] })}
                 min={minNumAccelerators} max={maxNumAccelerators}
                 firstSlider={pendingNumAccelerators.from} secondSlider={pendingNumAccelerators.to} />
-        {/if} -->
+        {/if}
     </ModalBody>
     <ModalFooter>
         <Button color="primary"
