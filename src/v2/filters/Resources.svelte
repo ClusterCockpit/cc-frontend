@@ -30,7 +30,7 @@
 
 
             if (cluster != null) {
-                const { filterRanges, partitions } = clusters.find(c => c.name == cluster).
+                const { filterRanges, partitions } = clusters.find(c => c.name == cluster)
                 minNumNodes = filterRanges.numNodes.from
                 maxNumNodes = filterRanges.numNodes.to
                 maxNumAccelerators = findMaxNumAccels([{ partitions }])
