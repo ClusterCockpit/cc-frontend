@@ -12,6 +12,51 @@ body {
 	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
 }
 
+main {
+	padding-top: 100px;
+}
+
 .container {
 	max-width: 100vw;
+}
+
+.navbar-brand img {
+    height: 30px;
+}
+
+.Site {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.Site-content {
+    flex: 1 0 auto;
+}
+
+.site-footer {
+    flex: none;
+}
+
+
+footer {
+    width: 100%;
+    padding: 0.1rem 1.0rem;
+    line-height: 1.5;
+}
+
+.footer-list {
+    list-style-type: none;
+    padding-left: 0;
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.footer-list-item {
+    margin: 0rem 0.8rem;
+    white-space: nowrap;
 }
