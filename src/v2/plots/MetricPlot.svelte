@@ -27,7 +27,7 @@
     export let height
     export let timestep
     export let series
-    export let statisticsSeries
+    export let statisticsSeries = null
     export let cluster
     export let metric
     export let useStatsSeries = null
@@ -75,7 +75,7 @@
             ? (a, b) => a <= b
             : (a, b) => a >= b
 
-        let avg = series.reduce((sum, series) => sum + series.statistics.avg) / series.length
+        let avg = series.reduce((sum, series) => sum + series.statistics.avg, 0) / series.length
 
         if (Number.isNaN(avg))
             return backgroundColors.normal
@@ -107,7 +107,7 @@
         : null
     const plotSeries = [{}]
     const plotData = [new Array(longestSeries)]
-    for (let i = 0; i < longestSeries; i++)
+    for (let i = 0; i < longestSeries; i++) // TODO: Cache/Reuse this array?
         plotData[0][i] = i * timestep
 
     let plotBands = undefined

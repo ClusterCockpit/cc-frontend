@@ -66,17 +66,11 @@ const entrypoint = (name, path) => ({
 });
 
 export default [
-	entrypoint('jobs', 'src/v2/jobs.entrypoint.js'),
-	entrypoint('user', 'src/v2/user.entrypoint.js'),
-	entrypoint('list', 'src/v2/list.entrypoint.js'),
-	entrypoint('job', 'src/v2/job.entrypoint.js')
-
-	// entrypoint('jobs', 'src/JobList/entrypoint.js'),
-	// entrypoint('job', 'src/JobView/entrypoint.js'),
-	// entrypoint('users', 'src/UserList/entrypoint.js'),
-	// entrypoint('user', 'src/UserView/entrypoint.js'),
-	// entrypoint('analysis', 'src/AnalysisView/entrypoint.js'),
-	// entrypoint('systems', 'src/SystemView/entrypoint.js'),
-	// entrypoint('node', 'src/NodeView/entrypoint.js')
+	entrypoint('jobs',    'src/v2/jobs.entrypoint.js'),
+	entrypoint('user',    'src/v2/user.entrypoint.js'),
+	entrypoint('list',    'src/v2/list.entrypoint.js'),
+	entrypoint('job',     'src/v2/job.entrypoint.js'),
+	entrypoint('systems', 'src/v2/systems.entrypoint.js'),
+	entrypoint('node',    'src/v2/node.entrypoint.js')
 ];
 
