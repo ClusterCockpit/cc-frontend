@@ -212,3 +212,46 @@ export function minScope(scopes) {
     return sm
 }
 
+export async function fetchMetrics(job, metrics, scopes) {
+    if (job.monitoringStatus == 0)
+        return null
+
+    let query = []
+    if (metrics != null) {
+        for (let metric of metrics) {
+            query.push(`metric=${metric}`)
+        }
+    }
+    if (scopes != null) {
+        for (let scope of scopes) {
+            query.push(`scope=${scope}`)
+        }
+    }
+
+    try {
+        let res = await fetch(`/api/jobs/metrics/${job.id}${(query.length > 0) ? '?' : ''}${query.join('&')}`)
+        if (res.status != 200) {
+            return { error: { status: res.status, message: await res.text() } }
+        }
+    
+        return await res.json()
+    } catch (e) {
+        return { error: e }
+    }
+}
+
+export function fetchMetricsStore(job, metrics, scopes) {
+    return readable({
+        fetching: true,
+        error: null,
+        data: null
+    }, (set) => {
+        fetchMetrics(job, metrics, scopes).then(res => {
+            set({
+                fetching: false,
+                error: res.error,
+                data: res.data
+            })
+        })
+    })
+}
