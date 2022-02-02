@@ -97,7 +97,7 @@
                 itemsPerRow={ccconfig.plot_view_plotsPerRow}
                 items={$nodesQuery.data.nodeMetrics.filter(h => h.host.includes(hostnameFilter) && h.metrics.length == 1)}>
 
-                <h4 style="width: 100%; text-align: center;">{item.host}</h4>
+                <h4 style="width: 100%; text-align: center;"><a href="/monitoring/node/{cluster}/{item.host}">{item.host}</a></h4>
                 <MetricPlot
                     width={width}
                     height={plotHeight}

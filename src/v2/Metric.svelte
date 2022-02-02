@@ -11,19 +11,18 @@
     import Timeseries from './plots/MetricPlot.svelte'
     import { maxScope, minScope } from './utils.js'
 
-    export let job
+    export let hosts
+    export let cluster
     export let metric
     export let atAllScopes
     export let width
     export let height = 300
 
-    const metricConfig = getContext('metrics')
-    const cluster = getContext('clusters').find(c => c.name == job.cluster)
-    const avaliableScopes = [...new Set(atAllScopes.map(item => item.scope))]
-    const hosts = job.resources.map(r => r.hostname)
+    const metricConfig = getContext('metrics'),
+          clusters = getContext('clusters'),
+          avaliableScopes = [...new Set(atAllScopes.map(item => item.scope))]
 
-    let plot, host = null, 
-        selectedScope = job.numNodes > 1 ? maxScope(avaliableScopes) : minScope(avaliableScopes)
+    let plot, host = null, selectedScope = hosts.length > 1 ? maxScope(avaliableScopes) : minScope(avaliableScopes)
     $: data = atAllScopes.find(metric => metric.scope == selectedScope)
     $: series = host == null ? data.series : data.series.filter(s => s.hostname == host)
 
@@ -35,7 +34,7 @@
 
 <InputGroup>
     <InputGroupText style="min-width: 150px;">
-        {metric} ({metricConfig(job.cluster, metric)?.unit})
+        {metric} ({metricConfig(cluster, metric)?.unit})
     </InputGroupText>
     <select class="form-select" bind:value={selectedScope} disabled={avaliableScopes.length == 1}>
         {#each avaliableScopes as scope}
@@ -57,7 +56,7 @@
         bind:this={plot}
         useStatsSeries={false}
         width={width} height={height}
-        cluster={cluster} metric={metric}
+        cluster={clusters.find(c => c.name == cluster)} metric={metric}
         timestep={data.timestep}
         series={series}
         statisticsSeries={data.statisticsSeries} />
