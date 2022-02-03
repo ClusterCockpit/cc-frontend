@@ -33,6 +33,7 @@
     let jobTags
     let fullWidth
     $: polarPlotSize = Math.min(fullWidth / 3 - 10, 300)
+    $: document.title = $initq.fetching ? 'Loading...' : ($initq.error ? 'Error' : `Job ${$initq.data.job.jobId} - ClusterCockpit`)
 </script>
 
 <div class="row" bind:clientWidth={fullWidth}></div>

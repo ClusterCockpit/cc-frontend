@@ -1,7 +1,7 @@
 <script>
     import { onMount, getContext } from 'svelte'
     import { init } from './utils.js'
-    import { Row, Col, Button, Icon } from 'sveltestrap'
+    import { Row, Col, Button, Icon, Card, Spinner } from 'sveltestrap'
     import Filters from './filters/Filters.svelte'
     import JobList from './joblist/JobList.svelte'
     import Refresher from './joblist/Refresher.svelte'
@@ -9,7 +9,7 @@
     import MetricSelection from './MetricSelection.svelte'
     import UserOrProject from './filters/UserOrProject.svelte'
 
-    const { } = init()
+    const { query: initq } = init()
 
     const ccconfig = getContext('cc-config')
 
@@ -18,6 +18,7 @@
     let filters, jobList
     let sorting = { field: 'startTime', order: 'DESC' }, isSortingOpen = false
     let metrics = ccconfig.plot_list_selectedMetrics, isMetricsSelectionOpen = false
+    let matchedJobs = null
 
     // The filterPresets are handled by the Filters component,
     // so we need to wait for it to be ready before we can start a query.
@@ -26,6 +27,16 @@
 </script>
 
 <Row>
+    {#if $initq.fetching}
+        <Col xs="auto">
+            <Spinner/>
+        </Col>
+    {:else if $initq.error}
+        <Col xs="auto">
+            <Card body color="danger">{$initq.error.message}</Card>
+        </Col>
+    {/if}
+
     <Col xs="auto">
         <Button
             outline color="primary"
@@ -45,6 +56,10 @@
             bind:this={filters}
             on:update={({ detail }) => jobList.update(detail.filters)} />
     </Col>
+
+    <Col xs="auto" style="margin-left: auto;">
+        <Button disabled outline>{matchedJobs == null ? 'Loading...' : `Matching Jobs: ${matchedJobs}`}</Button>
+    </Col>
 </Row>
 <br/>
 <Row>
@@ -61,6 +76,7 @@
         <JobList
             bind:metrics={metrics}
             bind:sorting={sorting}
+            bind:matchedJobs={matchedJobs}
             bind:this={jobList} />
     </Col>
 </Row>

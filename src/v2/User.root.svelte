@@ -10,7 +10,7 @@
     import Histogram from './plots/Histogram.svelte'
     import MetricSelection from './MetricSelection.svelte'
 
-    const { } = init()
+    const { query: initq } = init()
 
     const ccconfig = getContext('cc-config')
 
@@ -45,6 +45,16 @@
 </script>
 
 <Row>
+    {#if $initq.fetching}
+        <Col>
+            <Spinner/>
+        </Col>
+    {:else if $initq.error}
+        <Col xs="auto">
+            <Card body color="danger">{$initq.error.message}</Card>
+        </Col>
+    {/if}
+
     <Col xs="auto">
         <Button
             outline color="primary"
