@@ -1,31 +1,29 @@
 <script>
     import { Modal, ModalBody, ModalHeader, ModalFooter, InputGroup,
-             Button, ListGroup, ListGroupItem, Icon } from 'sveltestrap';
-    import { mutation } from '@urql/svelte';
+             Button, ListGroup, ListGroupItem, Icon } from 'sveltestrap'
+    import { mutation } from '@urql/svelte'
 
-    export let availableMetrics;
-    export let metricsInHistograms;
-    export let metricsInScatterplots;
+    export let availableMetrics
+    export let metricsInHistograms
+    export let metricsInScatterplots
 
     const updateConfigurationMutation = mutation({
         query: `mutation($name: String!, $value: String!) {
             updateConfiguration(name: $name, value: $value)
         }`
-    });
+    })
 
-    let isHistogramConfigOpen = false;
-    let isScatterPlotConfigOpen = false;
-    let selectedMetric1 = null, selectedMetric2 = null;
+    let isHistogramConfigOpen = false, isScatterPlotConfigOpen = false
+    let selectedMetric1 = null, selectedMetric2 = null
 
     function updateConfiguration(data) {
-        console.log('updateConfiguration:', data);
         updateConfigurationMutation({
                 name: data.name,
                 value: JSON.stringify(data.value)
             })
             .then(res => {
                 if (res.error)
-                    console.error(res.error);
+                    console.error(res.error)
             });
     }
 </script>
@@ -84,7 +82,7 @@
 
                     <Button style="float: right;" outline color="danger"
                         on:click={() => {
-                            metricsInScatterplots = metricsInScatterplots.filter(p => pair != p);
+                            metricsInScatterplots = metricsInScatterplots.filter(p => pair != p)
                             updateConfiguration({
                                 name: 'analysis_view_scatterPlotMetrics',
                                 value: metricsInScatterplots
@@ -113,13 +111,13 @@
             </select>
             <Button outline disabled={selectedMetric1 == null || selectedMetric2 == null}
                 on:click={() => {
-                    metricsInScatterplots = [...metricsInScatterplots, [selectedMetric1, selectedMetric2]];
-                    selectedMetric1 = null;
-                    selectedMetric2 = null;
+                    metricsInScatterplots = [...metricsInScatterplots, [selectedMetric1, selectedMetric2]]
+                    selectedMetric1 = null
+                    selectedMetric2 = null
                     updateConfiguration({
                         name: 'analysis_view_scatterPlotMetrics',
                         value: metricsInScatterplots
-                    });
+                    })
                 }}>
                 Add Plot
             </Button>

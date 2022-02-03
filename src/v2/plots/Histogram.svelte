@@ -16,7 +16,6 @@
 
 <script>
     import { onMount } from 'svelte'
-    import { formatNumber } from '../utils.js'
 
     export let data
     export let width
@@ -173,3 +172,36 @@
         top: 0px;
     }
 </style>
+
+<script context="module">
+    import { formatNumber } from '../utils.js'
+
+    export function binsFromFootprint(footprints, numBins) {
+        let min = 0, max = 0
+        if (footprints.length != 0) {
+            for (let x of footprints) {
+                min = Math.min(min, x)
+                max = Math.max(max, x)
+            }
+            max += 1 // So that we have an exclusive range.
+        }
+
+        if (numBins == null || numBins < 3)
+            numBins = 3
+
+        const bins = new Array(numBins).fill(0)
+        for (let x of footprints)
+            bins[Math.floor(((x - min) / (max - min)) * numBins)] += 1
+
+        return {
+            label: idx => {
+                let start = min + (idx / numBins) * (max - min)
+                let stop = min + ((idx + 1) / numBins) * (max - min)
+                return `${formatNumber(start)} - ${formatNumber(stop)}`
+            },
+            bins: bins.map((count, idx) => ({ value: idx, count: count })),
+            min: min,
+            max: max
+        }
+    }
+</script>
