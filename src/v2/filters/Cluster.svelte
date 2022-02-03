@@ -7,6 +7,7 @@
           initialized = getContext('initialized'),
           dispatch = createEventDispatcher()
 
+    export let disableClusterSelection = false
     export let isModified = false
     export let isOpen = false
     export let cluster = null
@@ -24,12 +25,14 @@
             <h4>Cluster</h4>
             <ListGroup>
                 <ListGroupItem
+                    disabled={disableClusterSelection}
                     active={pendingCluster == null}
                     on:click={() => (pendingCluster = null, pendingPartition = null)}>
                     Any Cluster
                 </ListGroupItem>
                 {#each clusters as cluster}
                     <ListGroupItem
+                        disabled={disableClusterSelection}
                         active={pendingCluster == cluster.name}
                         on:click={() => (pendingCluster = cluster.name, pendingPartition = null)}>
                         {cluster.name}

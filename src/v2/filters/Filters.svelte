@@ -28,6 +28,7 @@
 
     export let menuText = null
     export let filterPresets = {}
+    export let disableClusterSelection = false
 
     let filters = {
         projectMatch: filterPresets.projectMatch || 'contains',
@@ -191,6 +192,7 @@
 </Row>
 
 <Cluster
+    disableClusterSelection={disableClusterSelection}
     bind:isOpen={isClusterOpen}
     bind:cluster={filters.cluster}
     bind:partition={filters.partition}
