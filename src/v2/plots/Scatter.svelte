@@ -3,23 +3,15 @@
 </div>
 
 <script context="module">
-    const axesColor = '#aaaaaa';
-    const fontSize = 12;
-    const fontFamily = 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"';
+    import { formatNumber } from '../utils.js'
+
+    const axesColor = '#aaaaaa'
+    const fontSize = 12
+    const fontFamily = 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"'
     const paddingLeft = 40,
         paddingRight = 10,
         paddingTop = 10,
-        paddingBottom = 50;
-
-    const power = [1, 1e3, 1e6, 1e9, 1e12];
-    const suffix = ['', 'k', 'm', 'g'];
-    function formatNumber(x) {
-        for (let i = 0; i < suffix.length; i++)
-            if (power[i] <= x && x < power[i+1])
-                return `${x / power[i]}${suffix[i]}`;
-
-        return Math.abs(x) >= 1000 ? x.toExponential() : x.toString();
-    }
+        paddingBottom = 50
 
     function getStepSize(valueRange, pixelRange, minSpace) {
         const proposition = valueRange / (pixelRange / minSpace);

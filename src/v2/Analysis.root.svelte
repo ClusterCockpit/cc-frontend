@@ -6,6 +6,7 @@
     import Filters from './filters/Filters.svelte'
     import PlotSelection from './PlotSelection.svelte'
     import Histogram, { binsFromFootprint } from './plots/Histogram.svelte'
+    import ScatterPlot from './plots/Scatter.svelte'
     import PlotTable from './PlotTable.svelte'
 
     const { query: initq } = init()
@@ -174,6 +175,26 @@
                     width={width} height={250}
                     min={item.min} max={item.max}
                     data={item.bins} label={item.label} />
+            </PlotTable>
+        </Col>
+    </Row>
+    <br/>
+    <Row>
+        <Col>
+            <PlotTable
+                let:item
+                let:width
+                items={metricsInScatterplots.map(([m1, m2]) => ({
+                    m1, f1: $footprintsQuery.data.footprints.find(f => f.name == m1).footprints,
+                    m2, f2: $footprintsQuery.data.footprints.find(f => f.name == m2).footprints
+                }))}
+                itemsPerRow={ccconfig.plot_view_plotsPerRow}>
+
+                <ScatterPlot
+                    width={width} height={250}
+                    xLabel={`${item.m1} [${metricConfig(cluster.name, item.m1)?.unit}]`}
+                    yLabel={`${item.m2} [${metricConfig(cluster.name, item.m2)?.unit}]`}
+                    X={item.f1} Y={item.f2} />
             </PlotTable>
         </Col>
     </Row>
