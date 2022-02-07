@@ -146,7 +146,7 @@
             })
         }
 
-        paging = { itemsPerPage: itemsPerPage, page: page }
+        paging = { itemsPerPage: detail.itemsPerPage, page: detail.page }
     }} />
 
 <style>
