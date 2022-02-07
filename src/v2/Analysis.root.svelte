@@ -114,7 +114,7 @@
     </Row>
 {:else if $statsQuery.data}
     <Row>
-        <Col>
+        <Col xs="4">
             <Table>
                 <tr>
                     <th scope="col">Total Jobs</th>
@@ -134,19 +134,19 @@
                 </tr>
             </Table>
         </Col>
-        <div class="col" bind:clientWidth={histoWidth1}>
+        <div class="col-4" bind:clientWidth={histoWidth1}>
             {#key $statsQuery.data.stats[0].histWalltime}
                 <h4>Walltime Distribution</h4>
                 <Histogram
-                    width={histoWidth1} height={250}
+                    width={histoWidth1 - 25} height={250}
                     data={$statsQuery.data.stats[0].histWalltime} />
             {/key}
         </div>
-        <div class="col" bind:clientWidth={histoWidth2}>
+        <div class="col-4" bind:clientWidth={histoWidth2}>
             {#key $statsQuery.data.stats[0].histNumNodes}
                 <h4>Number of Nodes Distribution</h4>
                 <Histogram
-                    width={histoWidth2} height={250}
+                    width={histoWidth2 - 25} height={250}
                     data={$statsQuery.data.stats[0].histNumNodes} />
             {/key}
         </div>

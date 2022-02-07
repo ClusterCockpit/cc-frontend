@@ -95,7 +95,7 @@
             <Spinner secondary />
         </Col>
     {:else}
-        <Col>
+        <Col xs="4">
             <Table>
                 <tbody>
                     <tr>
@@ -121,20 +121,20 @@
                 </tbody>
             </Table>
         </Col>
-        <div class="col" style="text-align: center;" bind:clientWidth={w1}>
+        <div class="col-4" style="text-align: center;" bind:clientWidth={w1}>
             <b>Walltime</b>
             {#key $stats.data.jobsStatistics[0].histWalltime}
                 <Histogram
                     data={$stats.data.jobsStatistics[0].histWalltime}
-                    width={w1} height={histogramHeight} />
+                    width={w1 - 25} height={histogramHeight} />
             {/key}
         </div>
-        <div class="col" style="text-align: center;" bind:clientWidth={w2}>
+        <div class="col-4" style="text-align: center;" bind:clientWidth={w2}>
             <b>Number of Nodes</b>
             {#key $stats.data.jobsStatistics[0].histNumNodes}
                 <Histogram
                     data={$stats.data.jobsStatistics[0].histNumNodes}
-                    width={w2} height={histogramHeight} />
+                    width={w2 - 25} height={histogramHeight} />
             {/key}
         </div>
     {/if}
