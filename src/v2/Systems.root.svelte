@@ -5,6 +5,7 @@
     import TimeSelection from './filters/TimeSelection.svelte'
     import PlotTable from './PlotTable.svelte'
     import MetricPlot from './plots/MetricPlot.svelte'
+    import Roofline, { transformPerNodeData } from './plots/Roofline.svelte'
     import { getContext } from 'svelte'
 
     export let cluster
@@ -22,6 +23,7 @@
     const clusters = getContext('clusters')
     const ccconfig = getContext('cc-config')
 
+    let colWidth
     let plotHeight = 300
     let hostnameFilter = ''
     let selectedMetric = ccconfig.system_view_selectedMetric
@@ -32,6 +34,7 @@
             metrics {
                 name,
                 metric {
+                    scope
                     timestep,
                     series {
                         statistics { min, avg, max }
@@ -42,16 +45,29 @@
         }
     }`, {
         cluster: cluster,
-        metrics: [selectedMetric],
+        metrics: [],
         from: from.toISOString(),
         to: to.toISOString()
     })
 
-    $: $nodesQuery.variables = { cluster, metrics: [selectedMetric], from: from.toISOString(), to: to.toISOString() }
+    $: $nodesQuery.variables = { cluster, metrics: [...new Set([selectedMetric, 'flops_any', 'mem_bw'])], from: from.toISOString(), to: to.toISOString() }
 
     query(nodesQuery)
 </script>
 
+<Row>
+    {#if !$initq.error && !$initq.fetching && $nodesQuery.data}
+        <div class="col" bind:clientWidth={colWidth}>
+        {#key $nodesQuery.data}
+            <Roofline
+                width={colWidth - 25} height={300} colorDots={false}
+                data={transformPerNodeData($nodesQuery.data.nodeMetrics)}
+                maxY={clusters.find(c => c.name == cluster).partitions.reduce((max, part) => Math.max(max, part.flopRateSimd), 0)}/>
+        {/key}
+        </div>
+    {/if}
+</Row>
+<br/>
 <Row>
     {#if $initq.error}
         <Card body color="danger">{$initq.error.message}</Card>
@@ -95,15 +111,17 @@
                 let:item
                 let:width
                 itemsPerRow={ccconfig.plot_view_plotsPerRow}
-                items={$nodesQuery.data.nodeMetrics.filter(h => h.host.includes(hostnameFilter) && h.metrics.length == 1)}>
+                items={$nodesQuery.data.nodeMetrics
+                    .filter(h => h.host.includes(hostnameFilter) && h.metrics.some(m => m.name == selectedMetric && m.metric.scope == 'node'))
+                    .map(h => ({ host: h.host, data: h.metrics.find(m => m.name == selectedMetric && m.metric.scope == 'node') }))}>
 
                 <h4 style="width: 100%; text-align: center;"><a href="/monitoring/node/{cluster}/{item.host}">{item.host}</a></h4>
                 <MetricPlot
                     width={width}
                     height={plotHeight}
-                    timestep={item.metrics[0].metric.timestep}
-                    series={item.metrics[0].metric.series}
-                    metric={item.metrics[0].name}
+                    timestep={item.data.metric.timestep}
+                    series={item.data.metric.series}
+                    metric={item.data.name}
                     cluster={clusters.find(c => c.name == cluster)} />
             </PlotTable>
         {/if}

@@ -67,11 +67,11 @@
             return 2
     }
 
-    function render(ctx, data, cluster, width, height, colorDots) {
+    function render(ctx, data, cluster, width, height, colorDots, defaultMaxY) {
         if (width <= 0)
             return
 
-        const [minX, maxX, minY, maxY] = [0.01, 1000, 1., cluster.flopRateSimd]
+        const [minX, maxX, minY, maxY] = [0.01, 1000, 1., cluster?.flopRateSimd || defaultMaxY]
         const w = width - paddingLeft - paddingRight
         const h = height - paddingTop - paddingBottom
 
@@ -184,7 +184,7 @@
         ctx.strokeStyle = 'black'
         ctx.lineWidth = 2
         ctx.beginPath()
-        {
+        if (cluster != null) {
             const ycut = 0.01 * cluster.memoryBandwidth
             const scalarKnee = (cluster.flopRateScalar - ycut) / cluster.memoryBandwidth
             const simdKnee = (cluster.flopRateSimd - ycut) / cluster.memoryBandwidth
@@ -256,6 +256,34 @@
             yLabel: 'Performance [GFLOPS]'
         }
     }
+
+    // Return something to be plotted. The argument shall be the result of the
+    // `nodeMetrics` GraphQL query.
+    export function transformPerNodeData(nodes) {
+        const x = [], y = [], c = []
+        for (let node of nodes) {
+            let flopsAny = node.metrics.find(m => m.name == 'flops_any' && m.metric.scope == 'node')?.metric
+            let memBw    = node.metrics.find(m => m.name == 'mem_bw'    && m.metric.scope == 'node')?.metric
+            if (!flopsAny || !memBw)
+                continue
+
+            let flopsData = flopsAny.series[0].data, memBwData = memBw.series[0].data
+            const f = flopsData[flopsData.length - 1], m = memBwData[flopsData.length - 1]
+            const intensity = f / m
+            if (Number.isNaN(intensity) || !Number.isFinite(intensity))
+                continue
+
+            x.push(intensity)
+            y.push(f)
+            c.push(0)
+        }
+
+        return {
+            x, y, c,
+            xLabel: 'Intensity [FLOPS/byte]',
+            yLabel: 'Performance [GFLOPS]'
+        }
+    }
 </script>
 
 <script>
@@ -263,7 +291,8 @@
 
     export let flopsAny = null
     export let memBw = null
-    export let cluster
+    export let cluster = null
+    export let maxY = null
     export let width
     export let height
     export let tiles = null
@@ -285,7 +314,7 @@
         canvasElement.width = width
         canvasElement.height = height
         ctx = canvasElement.getContext('2d')
-        render(ctx, data, cluster, width, height, colorDots)
+        render(ctx, data, cluster, width, height, colorDots, maxY)
     })
 
     let timeoutId = null
@@ -301,7 +330,7 @@
             canvasElement.width = width
             canvasElement.height = height
             ctx = canvasElement.getContext('2d')
-            render(ctx, data, cluster, width, height, colorDots)
+            render(ctx, data, cluster, width, height, colorDots, maxY)
         }, 250)
     }
 
