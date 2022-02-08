@@ -8,6 +8,7 @@
     import Histogram, { binsFromFootprint } from './plots/Histogram.svelte'
     import ScatterPlot from './plots/Scatter.svelte'
     import PlotTable from './PlotTable.svelte'
+    import Roofline from './plots/Roofline.svelte'
 
     const { query: initq } = init()
 
@@ -15,7 +16,8 @@
 
     let cluster
     let filters
-    let histoWidth1, histoWidth2
+    let rooflineMaxY
+    let histoWidth1, histoWidth2, rooflineWidth
     let numBins = 50
     const ccconfig = getContext('cc-config'),
           clusters = getContext('clusters'),
@@ -30,6 +32,11 @@
         if (data != null) {
             cluster = data.clusters.find(c => c.name == filterPresets.cluster)
             console.assert(cluster != null, `This cluster could not be found: ${filterPresets.cluster}`)
+
+            rooflineMaxY = cluster.partitions.reduce((max, part) => Math.max(max, part.flopRateSimd), 0)
+            $rooflineQuery.variables.maxY = rooflineMaxY
+            $rooflineQuery.context.pause = false
+            $rooflineQuery.reexecute()
         }
     })
 
@@ -56,8 +63,21 @@
     `, { filter: [], metrics }, { pause: true })
     $: $footprintsQuery.variables = { ...$footprintsQuery.variables, metrics }
 
+    const rooflineQuery = operationStore(`
+        query($filter: [JobFilter!]!, $rows: Int!, $cols: Int!,
+                $minX: Float!, $minY: Float!, $maxX: Float!, $maxY: Float!) {
+            rooflineHeatmap(filter: $filter, rows: $rows, cols: $cols,
+                    minX: $minX, minY: $minY, maxX: $maxX, maxY: $maxY)
+        }
+    `, {
+        filter: [],
+        rows: 50, cols: 50,
+        minX: 0.01, minY: 1., maxX: 1000., maxY: -1
+    }, { pause: true });
+
     query(statsQuery)
     query(footprintsQuery)
+    query(rooflineQuery)
     onMount(() => filters.update())
 </script>
 
@@ -101,6 +121,7 @@
                 $statsQuery.variables = { filter: detail.filters }
                 $footprintsQuery.context.pause = false
                 $footprintsQuery.variables = { metrics, filter: detail.filters }
+                $rooflineQuery.variables = { ...$rooflineQuery.variables, filter: detail.filters }
             }} />
     </Col>
 </Row>
@@ -114,7 +135,7 @@
     </Row>
 {:else if $statsQuery.data}
     <Row>
-        <Col xs="4">
+        <Col xs="3">
             <Table>
                 <tr>
                     <th scope="col">Total Jobs</th>
@@ -134,7 +155,7 @@
                 </tr>
             </Table>
         </Col>
-        <div class="col-4" bind:clientWidth={histoWidth1}>
+        <div class="col-3" bind:clientWidth={histoWidth1}>
             {#key $statsQuery.data.stats[0].histWalltime}
                 <h4>Walltime Distribution</h4>
                 <Histogram
@@ -142,13 +163,28 @@
                     data={$statsQuery.data.stats[0].histWalltime} />
             {/key}
         </div>
-        <div class="col-4" bind:clientWidth={histoWidth2}>
+        <div class="col-3" bind:clientWidth={histoWidth2}>
             {#key $statsQuery.data.stats[0].histNumNodes}
                 <h4>Number of Nodes Distribution</h4>
                 <Histogram
                     width={histoWidth2 - 25} height={250}
                     data={$statsQuery.data.stats[0].histNumNodes} />
             {/key}
+        </div>
+        <div class="col-3" bind:clientWidth={rooflineWidth}>
+            {#if $rooflineQuery.fetching}
+                <Spinner />
+            {:else if $rooflineQuery.error}
+                <Card body color="danger">{$rooflineQuery.error.message}</Card>
+            {:else if $rooflineQuery.data && cluster}
+                {#key $rooflineQuery.data}
+                    <Roofline
+                        width={rooflineWidth - 25} height={250}
+                        tiles={$rooflineQuery.data.rooflineHeatmap}
+                        cluster={cluster.partitions.length == 1 ? cluster.partitions[0] : null}
+                        maxY={rooflineMaxY} />
+                {/key}
+            {/if}
         </div>
     </Row>
 {/if}
