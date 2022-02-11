@@ -1,4 +1,4 @@
-<!-- 
+<!--
     @component
 
     Properties:
@@ -104,7 +104,7 @@
 <Row>
     <Col>
         <ButtonDropdown class="cc-dropdown-on-hover">
-            <DropdownToggle outline caret color="primary">
+            <DropdownToggle outline caret color="success">
                 <Icon name="sliders"/>
                 Filters
             </DropdownToggle>
@@ -172,7 +172,7 @@
         {#if filters.tags.length != 0}
             <Info icon="tags" on:click={() => (isTagsOpen = true)}>
                 {#each filters.tags as tagId}
-                    <Tag id={tagId} clickable={false} />                    
+                    <Tag id={tagId} clickable={false} />
                 {/each}
             </Info>
         {/if}
@@ -202,7 +202,7 @@
     bind:isOpen={isJobStatesOpen}
     bind:states={filters.states}
     on:update={() => update()} />
-    
+
 <StartTime
     bind:isOpen={isStartTimeOpen}
     bind:from={filters.startTime.from}

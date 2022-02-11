@@ -36,19 +36,20 @@
             <Card body color="danger">{$initq.error.message}</Card>
         </Col>
     {/if}
-
+</Row>
+<Row>
     <Col xs="auto">
         <Button
             outline color="primary"
             on:click={() => (isSortingOpen = true)}>
             <Icon name="sort-up"/> Sorting
         </Button>
-
         <Button
             outline color="primary"
             on:click={() => (isMetricsSelectionOpen = true)}>
             <Icon name="graph-up"/> Metrics
         </Button>
+        <Button disabled outline>{matchedJobs == null ? 'Loading...' : `${matchedJobs} jobs`}</Button>
     </Col>
     <Col xs="auto">
         <Filters
@@ -57,16 +58,10 @@
             on:update={({ detail }) => jobList.update(detail.filters)} />
     </Col>
 
-    <Col xs="auto" style="margin-left: auto;">
-        <Button disabled outline>{matchedJobs == null ? 'Loading...' : `Matching Jobs: ${matchedJobs}`}</Button>
-    </Col>
-</Row>
-<br/>
-<Row>
-    <Col xs="9">
+    <Col xs="3" style="margin-left: auto;">
         <UserOrProject on:update={({ detail }) => filters.update(detail)}/>
     </Col>
-    <Col xs="3" style="margin-left: auto;">
+    <Col xs="2">
         <Refresher on:reload={() => jobList.update()} />
     </Col>
 </Row>

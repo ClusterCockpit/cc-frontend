@@ -47,5 +47,5 @@
     </select>
     <Input
         type="text" bind:value={term} on:change={() => termChanged()} on:keyup={(event) => termChanged(event.key == 'Enter' ? 0 : throttle)}
-        placeholder={mode == 'user' ? 'username...' : 'project...'} />
+        placeholder={mode == 'user' ? 'filter username...' : 'filter project...'} />
 </InputGroup>
