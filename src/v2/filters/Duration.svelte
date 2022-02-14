@@ -4,7 +4,6 @@
 
     const dispatch = createEventDispatcher()
 
-    export let isModified = false
     export let isOpen = false
     export let from = null
     export let to = null
@@ -28,10 +27,6 @@
     function hoursAndMinsToSecs({ hours, mins }) {
         return hours * 3600 + mins * 60
     }
-
-    $: isModified = (from != hoursAndMinsToSecs(pendingFrom) || to != hoursAndMinsToSecs(pendingTo))
-        && !(from == null && pendingFrom.hours == 0 && pendingFrom.mins == 0)
-        && !(to == null && pendingTo.hours == 0 && pendingTo.mins == 0)
 </script>
 
 <Modal isOpen={isOpen} toggle={() => (isOpen = !isOpen)}>
@@ -93,6 +88,7 @@
             from = null
             to = null
             reset()
+            dispatch('update', { from, to })
         }}>Reset</Button>
         <Button on:click={() => (isOpen = false)}>Close</Button>
     </ModalFooter>

@@ -58,8 +58,10 @@
         }}>Close & Apply</Button>
         <Button color="danger" on:click={() => {
             isOpen = false
-            pendingTags = [...tags]
-        }}>Cancel</Button>
+            tags = []
+            pendingTags = []
+            dispatch('update', { tags })
+        }}>Reset</Button>
         <Button on:click={() => (isOpen = false)}>Close</Button>
     </ModalFooter>
 </Modal>

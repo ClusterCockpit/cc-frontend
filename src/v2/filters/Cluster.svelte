@@ -68,9 +68,10 @@
         }}>Close & Apply</Button>
         <Button color="danger" on:click={() => {
             isOpen = false
-            pendingCluster = cluster
-            pendingPartition = partition
-        }}>Cancel</Button>
+            cluster = pendingCluster = null
+            partition = pendingPartition = null
+            dispatch('update', { cluster, partition })
+        }}>Reset</Button>
         <Button on:click={() => (isOpen = false)}>Close</Button>
     </ModalFooter>
 </Modal>

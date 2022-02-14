@@ -26,9 +26,6 @@
     let minNumNodes = 1, maxNumNodes = 0, minNumHWThreads = 1, maxNumHWThreads = 0, minNumAccelerators = 0, maxNumAccelerators = 0
     $: {
         if ($initialized) {
-
-
-
             if (cluster != null) {
                 const { filterRanges, partitions } = clusters.find(c => c.name == cluster)
                 minNumNodes = filterRanges.numNodes.from
@@ -84,7 +81,7 @@
                 numNodes = { from: pendingNumNodes.from, to: pendingNumNodes.to }
                 numHWThreads = { from: pendingNumHWThreads.from, to: pendingNumHWThreads.to }
                 numAccelerators = { from: pendingNumAccelerators.from, to: pendingNumAccelerators.to }
-                dispatch('update', { numNodes })
+                dispatch('update', { numNodes, numHWThreads, numAccelerators })
             }}>
             Close & Apply
         </Button>
@@ -93,6 +90,10 @@
             pendingNumNodes = { from: null, to: null }
             pendingNumHWThreads = { from: null, to: null }
             pendingNumAccelerators = { from: null, to: null }
+            numNodes = { from: pendingNumNodes.from, to: pendingNumNodes.to }
+            numHWThreads = { from: pendingNumHWThreads.from, to: pendingNumHWThreads.to }
+            numAccelerators = { from: pendingNumAccelerators.from, to: pendingNumAccelerators.to }
+            dispatch('update', { numNodes, numHWThreads, numAccelerators })
         }}>Reset</Button>
         <Button on:click={() => (isOpen = false)}>Close</Button>
     </ModalFooter>

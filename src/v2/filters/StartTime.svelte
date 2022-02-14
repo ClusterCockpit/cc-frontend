@@ -93,6 +93,7 @@
             from = null
             to = null
             reset()
+            dispatch('update', { from, to })
         }}>Reset</Button>
         <Button on:click={() => (isOpen = false)}>Close</Button>
     </ModalFooter>
