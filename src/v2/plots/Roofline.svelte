@@ -1,5 +1,5 @@
 <div class="cc-plot">
-    <canvas bind:this={canvasElement} width="{width}" height="{height}"></canvas>
+    <canvas bind:this={canvasElement} width="{prevWidth}" height="{height}"></canvas>
 </div>
 
 <script context="module">
@@ -315,9 +315,10 @@
         canvasElement.height = height
         ctx = canvasElement.getContext('2d')
         render(ctx, data, cluster, width, height, colorDots, maxY)
+        prevWidth = width
     })
 
-    let timeoutId = null
+    let timeoutId = null, prevWidth = width
     function sizeChanged() {
         if (timeoutId != null)
             clearTimeout(timeoutId)
@@ -327,10 +328,14 @@
             if (!canvasElement)
                 return
 
+            if (Math.abs(prevWidth - width) < 10)
+                return
+
             canvasElement.width = width
             canvasElement.height = height
             ctx = canvasElement.getContext('2d')
             render(ctx, data, cluster, width, height, colorDots, maxY)
+            prevWidth = width
         }, 250)
     }
 

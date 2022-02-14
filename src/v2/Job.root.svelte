@@ -57,7 +57,7 @@
         </Col>
         <Col>
             <Roofline
-                width={fullWidth / 3} height={polarPlotSize}
+                width={fullWidth / 3 - 10} height={polarPlotSize}
                 cluster={clusters
                     .find(c => c.name == $initq.data.job.cluster).partitions
                     .find(p => p.name == $initq.data.job.partition)}
