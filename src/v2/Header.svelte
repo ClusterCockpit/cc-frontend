@@ -23,13 +23,13 @@
     ]
 </script>
 
-<Navbar color="light" light expand="md">
+<Navbar color="light" light expand="lg" fixed="top">
     <NavbarBrand href="/">
         <img alt="ClusterCockpit Logo" src="/img/logo.png" height="25rem">
     </NavbarBrand>
     <NavbarToggler on:click={() => (isOpen = !isOpen)} />
-    <Collapse {isOpen} navbar expand="md" on:update={({ detail }) => (isOpen = detail.isOpen)}>
-        <Nav class="ms-auto" navbar>
+    <Collapse {isOpen} navbar expand="lg" on:update={({ detail }) => (isOpen = detail.isOpen)}>
+        <Nav pills>
             {#each views.filter(item => !item.adminOnly || isAdmin) as item}
                 <NavLink href={item.href} active={currentView === item.view}><Icon name={item.icon}/> {item.title}</NavLink>
             {/each}
@@ -47,23 +47,21 @@
                     </Dropdown>
                 </NavItem>
             {/each}
-            <NavItem>
+        </Nav>
+    </Collapse>
+            <div class="d-flex">
                 <form method="GET" action="/search">
                     <InputGroup>
                         <Input type="text" placeholder={isAdmin ? "Search jobId / username" : "Search jobId"} name="searchId"/>
                         <Button outline type="submit"><Icon name="search"/></Button>
                     </InputGroup>
                 </form>
-            </NavItem>
             {#if username}
-                <NavItem>
                     <form method="POST" action="/logout">
-                        <Button outline type="submit" style="margin-left: 10px;">
-                            <Icon name="box-arrow-right"/> Logout
+                        <Button outline color="success" type="submit" style="margin-left: 10px;">
+                            <Icon name="box-arrow-right"/> Logout {username}
                         </Button>
                     </form>
-                </NavItem>
             {/if}
-        </Nav>
-    </Collapse>
+            </div>
 </Navbar>
