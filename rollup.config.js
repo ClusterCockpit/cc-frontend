@@ -66,6 +66,7 @@ const entrypoint = (name, path) => ({
 });
 
 export default [
+	entrypoint('header',   'src/v2/header.entrypoint.js'),
 	entrypoint('jobs',     'src/v2/jobs.entrypoint.js'),
 	entrypoint('user',     'src/v2/user.entrypoint.js'),
 	entrypoint('list',     'src/v2/list.entrypoint.js'),

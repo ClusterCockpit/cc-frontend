@@ -1,3 +1,4 @@
+import {} from './header.entrypoint.js'
 import User from './User.root.svelte'
 
 new User({

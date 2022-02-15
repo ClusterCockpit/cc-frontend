@@ -1,3 +1,4 @@
+import {} from './header.entrypoint.js'
 import Node from './Node.root.svelte'
 
 new Node({

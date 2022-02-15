@@ -1,3 +1,4 @@
+import {} from './header.entrypoint.js'
 import List from './List.root.svelte'
 
 new List({

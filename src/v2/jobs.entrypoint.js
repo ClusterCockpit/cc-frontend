@@ -1,3 +1,4 @@
+import {} from './header.entrypoint.js'
 import Jobs from './Jobs.root.svelte'
 
 new Jobs({

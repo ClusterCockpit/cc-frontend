@@ -1,3 +1,4 @@
+import {} from './header.entrypoint.js'
 import Systems from './Systems.root.svelte'
 
 new Systems({
