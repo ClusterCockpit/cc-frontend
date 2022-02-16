@@ -1,6 +1,10 @@
 import Header from './Header.svelte'
 
-new Header({
-    target: document.getElementById('svelte-header'),
-    props: { ...header },
-})
+const headerDomTarget = document.getElementById('svelte-header')
+
+if (headerDomTarget != null) {
+    new Header({
+        target: headerDomTarget,
+        props: { ...header },
+    })
+}
