@@ -28,10 +28,9 @@
     let cluster
     let filters
     let rooflineMaxY
-    let histoWidth1, histoWidth2, rooflineWidth
+    let colWidth
     let numBins = 50
     const ccconfig = getContext('cc-config'),
-          clusters = getContext('clusters'),
           metricConfig = getContext('metrics')
 
     let metricsInHistograms = ccconfig.analysis_view_histogramMetrics,
@@ -61,6 +60,8 @@
                 histWalltime { count, value }
                 histNumNodes { count, value }
             }
+
+            topUsers: jobsCount(filter: $filter, groupBy: USER, limit: 5) { name, count }
         }
     `, { filter: [] }, { pause: true })
 
@@ -101,27 +102,13 @@
     <Col xs="auto">
         {#if $initq.error}
             <Card body color="danger">{$initq.error.message}</Card>
-        {:else if $initq.data}
-            <InputGroup>
-                <InputGroupText><Icon name="clipboard-check"/></InputGroupText>
-                <InputGroupText>Analysis</InputGroupText>
-                <select class="form-select" bind:value={filterPresets.cluster} on:change={(e) => 
-                    document.location.href = `/monitoring/analysis/${filterPresets.cluster}`}>
-                    {#each clusters as cluster}
-                        <option value={cluster.name}>{cluster.name}</option>
-                    {/each}
-                </select>
-            </InputGroup>
-        {/if}
-    </Col>
-    {#if cluster}
-        <Col xs="auto">
+        {:else if cluster}
             <PlotSelection
                 availableMetrics={cluster.metricConfig.map(mc => mc.name)}
                 bind:metricsInHistograms={metricsInHistograms}
                 bind:metricsInScatterplots={metricsInScatterplots} />
-        </Col>
-    {/if}
+        {/if}
+    </Col>
     <Col xs="auto">
         <Filters
             bind:this={filters}
@@ -146,43 +133,54 @@
     </Row>
 {:else if $statsQuery.data}
     <Row>
-        <Col xs="3">
-            <Table>
-                <tr>
-                    <th scope="col">Total Jobs</th>
-                    <td>{$statsQuery.data.stats[0].totalJobs}</td>
-                </tr>
-                <tr>
-                    <th scope="col">Short Jobs (&#60; 2m)</th>
-                    <td>{$statsQuery.data.stats[0].shortJobs}</td>
-                </tr>
-                <tr>
-                    <th scope="col">Total Walltime</th>
-                    <td>{$statsQuery.data.stats[0].totalWalltime}</td>
-                </tr>
-                <tr>
-                    <th scope="col">Total Core Hours</th>
-                    <td>{$statsQuery.data.stats[0].totalCoreHours}</td>
-                </tr>
-            </Table>
-        </Col>
-        <div class="col-3" bind:clientWidth={histoWidth1}>
+        <div class="col-3" bind:clientWidth={colWidth}>
+            <div style="height: 40%">
+                <Table>
+                    <tr>
+                        <th scope="col">Total Jobs</th>
+                        <td>{$statsQuery.data.stats[0].totalJobs}</td>
+                    </tr>
+                    <tr>
+                        <th scope="col">Short Jobs (&#60; 2m)</th>
+                        <td>{$statsQuery.data.stats[0].shortJobs}</td>
+                    </tr>
+                    <tr>
+                        <th scope="col">Total Walltime</th>
+                        <td>{$statsQuery.data.stats[0].totalWalltime}</td>
+                    </tr>
+                    <tr>
+                        <th scope="col">Total Core Hours</th>
+                        <td>{$statsQuery.data.stats[0].totalCoreHours}</td>
+                    </tr>
+                </Table>
+            </div>
+            <div style="height: 60%;">
+                {#key $statsQuery.data.topUsers}
+                    <h4>Top Users (by number of jobs)</h4>
+                    <Histogram
+                        width={colWidth - 25} height={300 * 0.5}
+                        data={$statsQuery.data.topUsers.map(({ count }, idx) => ({ count, value: idx }))}
+                        label={(x) => x < $statsQuery.data.topUsers.length ? $statsQuery.data.topUsers[Math.floor(x)].name : '0'} />
+                {/key}
+            </div>
+        </div>
+        <div class="col-3">
             {#key $statsQuery.data.stats[0].histWalltime}
                 <h4>Walltime Distribution</h4>
                 <Histogram
-                    width={histoWidth1 - 25} height={250}
+                    width={colWidth - 25} height={300}
                     data={$statsQuery.data.stats[0].histWalltime} />
             {/key}
         </div>
-        <div class="col-3" bind:clientWidth={histoWidth2}>
+        <div class="col-3">
             {#key $statsQuery.data.stats[0].histNumNodes}
                 <h4>Number of Nodes Distribution</h4>
                 <Histogram
-                    width={histoWidth2 - 25} height={250}
+                    width={colWidth - 25} height={300}
                     data={$statsQuery.data.stats[0].histNumNodes} />
             {/key}
         </div>
-        <div class="col-3" bind:clientWidth={rooflineWidth}>
+        <div class="col-3">
             {#if $rooflineQuery.fetching}
                 <Spinner />
             {:else if $rooflineQuery.error}
@@ -190,7 +188,7 @@
             {:else if $rooflineQuery.data && cluster}
                 {#key $rooflineQuery.data}
                     <Roofline
-                        width={rooflineWidth - 25} height={250}
+                        width={colWidth - 25} height={300}
                         tiles={$rooflineQuery.data.rooflineHeatmap}
                         cluster={cluster.partitions.length == 1 ? cluster.partitions[0] : null}
                         maxY={rooflineMaxY} />
@@ -207,7 +205,7 @@
             <Card body color="danger">{$footprintsQuery.error.message}</Card>
         </Col>
     </Row>
-{:else if $footprintsQuery.data}
+{:else if $footprintsQuery.data && $initq.data}
     <Row>
         <Col>
             <PlotTable
@@ -233,8 +231,7 @@
                 let:width
                 items={metricsInScatterplots.map(([m1, m2]) => ({
                     m1, f1: $footprintsQuery.data.footprints.find(f => f.name == m1).footprints,
-                    m2, f2: $footprintsQuery.data.footprints.find(f => f.name == m2).footprints
-                }))}
+                    m2, f2: $footprintsQuery.data.footprints.find(f => f.name == m2).footprints }))}
                 itemsPerRow={ccconfig.plot_view_plotsPerRow}>
 
                 <ScatterPlot
