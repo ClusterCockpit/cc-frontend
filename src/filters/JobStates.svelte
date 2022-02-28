@@ -1,10 +1,12 @@
+<script context="module">
+    export const allJobStates = [ 'running', 'completed', 'failed', 'cancelled', 'stopped', 'timeout', 'preempted', 'out_of_memory' ]
+</script>
 <script>
     import { createEventDispatcher } from 'svelte'
     import { Button, ListGroup, ListGroupItem,
              Modal, ModalBody, ModalHeader, ModalFooter } from 'sveltestrap'
 
     const dispatch = createEventDispatcher()
-    const allJobStates = [ 'running', 'completed', 'failed', 'canceled', 'stopped', 'timeout' ]
 
     export let isModified = false
     export let isOpen = false

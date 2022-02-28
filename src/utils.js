@@ -1,6 +1,6 @@
 import { expiringCacheExchange } from './cache-exchange.js'
 import { initClient } from '@urql/svelte'
-import { setContext, getContext, hasContext, tick } from 'svelte'
+import { setContext, getContext, hasContext, onDestroy, tick } from 'svelte'
 import { dedupExchange, fetchExchange } from '@urql/core'
 import { readable } from 'svelte/store'
 
@@ -254,4 +254,31 @@ export function fetchMetricsStore(job, metrics, scopes) {
             })
         })
     })
+}
+
+export function stickyHeader(datatableHeaderSelector, updatePading) {
+    const header = document.querySelector('header > nav.navbar')
+    if (!header)
+        return
+
+    let ticking = false, datatableHeader = null
+    const onscroll = event => {
+        if (ticking)
+            return
+
+        ticking = true
+        window.requestAnimationFrame(() => {
+            ticking = false
+            if (!datatableHeader)
+                datatableHeader = document.querySelector(datatableHeaderSelector)
+
+            const top = datatableHeader.getBoundingClientRect().top
+            updatePading(top < header.clientHeight
+                ? (header.clientHeight - top) + 10
+                : 10)
+        })
+    }
+
+    document.addEventListener('scroll', onscroll)
+    onDestroy(() => document.removeEventListener('scroll', onscroll))
 }

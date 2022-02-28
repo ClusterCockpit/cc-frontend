@@ -14,6 +14,7 @@
     import { Row, Table, Card, Spinner } from 'sveltestrap'
     import Pagination from './Pagination.svelte'
     import JobListRow from './Row.svelte'
+    import { stickyHeader } from '../utils.js'
 
     const ccconfig = getContext('cc-config'),
           clusters = getContext('clusters'),
@@ -71,8 +72,10 @@
 
     let tableWidth = null
     let jobInfoColumnWidth = 250
-    let headerPaddingTop = 0
     $: plotWidth = Math.floor((tableWidth - jobInfoColumnWidth) / metrics.length - 10)
+
+    let headerPaddingTop = 0
+    stickyHeader('.cc-table-wrapper > table.table >thead > tr > th.position-sticky:nth-child(1)', (x) => (headerPaddingTop = x))
 </script>
 
 <Row>

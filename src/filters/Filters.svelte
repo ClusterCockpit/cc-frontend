@@ -10,12 +10,12 @@
     - void update(additionalFilters: Object?): Triggers an update
  -->
 <script>
-    import { Row, Col, Dropdown, DropdownItem, DropdownMenu,
+    import { Row, Col, DropdownItem, DropdownMenu,
              DropdownToggle, ButtonDropdown, Icon } from 'sveltestrap'
     import { createEventDispatcher } from 'svelte'
     import Info from './InfoBox.svelte'
     import Cluster from './Cluster.svelte'
-    import JobStates from './JobStates.svelte'
+    import JobStates, { allJobStates } from './JobStates.svelte'
     import StartTime from './StartTime.svelte'
     import Tags from './Tags.svelte'
     import Tag from '../Tag.svelte'
@@ -23,8 +23,7 @@
     import Resources from './Resources.svelte'
     import Statistics from './Stats.svelte'
 
-    const dispatch = createEventDispatcher(),
-          allJobStates = ['running', 'completed', 'failed', 'canceled', 'stopped', 'timeout']
+    const dispatch = createEventDispatcher()
 
     export let menuText = null
     export let filterPresets = {}
