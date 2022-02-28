@@ -2,7 +2,7 @@
     import { init } from './utils.js'
     import { getContext, onMount } from 'svelte'
     import { operationStore, query } from '@urql/svelte'
-    import { Row, Col, Icon, Spinner, Card, InputGroup, InputGroupText, Table } from 'sveltestrap'
+    import { Row, Col, Spinner, Card, Table } from 'sveltestrap'
     import Filters from './filters/Filters.svelte'
     import PlotSelection from './PlotSelection.svelte'
     import Histogram, { binsFromFootprint } from './plots/Histogram.svelte'
@@ -13,6 +13,17 @@
     const { query: initq } = init()
 
     export let filterPresets
+
+    // By default, look at the jobs of the last 6 hours:
+    if (filterPresets?.startTime == null) {
+        if (filterPresets == null)
+            filterPresets = {}
+
+        let now = new Date(Date.now())
+        let hourAgo = new Date(now)
+        hourAgo.setHours(hourAgo.getHours() - 6)
+        filterPresets.startTime = { from: hourAgo.toISOString(), to: now.toISOString() }
+    }
 
     let cluster
     let filters
