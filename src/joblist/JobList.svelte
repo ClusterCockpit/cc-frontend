@@ -26,7 +26,7 @@
 
     let itemsPerPage = ccconfig.plot_list_jobsPerPage
     let page = 1
-    let paging = { itemsPerPage: itemsPerPage, page: page }
+    let paging = { itemsPerPage, page }
 
     const jobs = operationStore(`
     query($filter: [JobFilter!]!, $sorting: OrderByInput!, $paging: PageRequest! ){
@@ -64,6 +64,8 @@
             console.log('filters:', ...filters.map(f => Object.entries(f)).flat(2))
         }
 
+        page = 1
+        $jobs.variables.paging = paging = { page, itemsPerPage };
         $jobs.context.pause = false
         $jobs.reexecute({ requestPolicy: 'network-only' })
     }
@@ -133,7 +135,7 @@
 </Row>
 
 <Pagination
-    {page}
+    bind:page={page}
     {itemsPerPage}
     itemText="Jobs"
     totalItems={matchedJobs}

@@ -26,14 +26,16 @@
         </span>
     </div>
     <div class="cc-pagination-right">
-        {#if !backButtonDisabled }
+        {#if !backButtonDisabled}
         <button class="reset nav" role="button" type="button"
             on:click|preventDefault="{reset}"></button>
         <button class="left nav" role="button" type="button"
             on:click|preventDefault="{() => { page -= 1; }}"></button>
         {/if}
+        {#if !nextButtonDisabled}
         <button class="right nav" role="button" type="button"
             on:click|preventDefault="{() => { page += 1; }}"></button>
+        {/if}
     </div>
 </div>
 
@@ -45,7 +47,7 @@
     export let itemText = "items";
     export let pageSizes = [10,25,50];
 
-    let backButtonDisabled;
+    let backButtonDisabled, nextButtonDisabled;
 
     const dispatch = createEventDispatcher();
 
@@ -61,6 +63,7 @@
         dispatch("update", { itemsPerPage, page });
     }
     $: backButtonDisabled = (page === 1);
+    $: nextButtonDisabled = (page >= (totalItems / itemsPerPage));
 
     function reset ( event ) {
         page = 1;
