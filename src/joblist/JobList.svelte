@@ -60,6 +60,11 @@
     // (Re-)query and optionally set new filters.
     export function update(filters) {
         if (filters != null) {
+            let minRunningFor = ccconfig.plot_list_hideShortRunningJobs
+            if (minRunningFor && minRunningFor > 0) {
+                filters.push({ minRunningFor })
+            }
+
             $jobs.variables.filter = filters
             console.log('filters:', ...filters.map(f => Object.entries(f)).flat(2))
         }
