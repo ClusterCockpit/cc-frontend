@@ -22,7 +22,7 @@
             <span class="focus"></span>
         </div>
         <span class="cc-pagination-text">
-            { (page - 1) * itemsPerPage } - { (page - 1) * itemsPerPage + itemsPerPage } of { totalItems } { itemText }
+            { (page - 1) * itemsPerPage } - { Math.min((page - 1) * itemsPerPage + itemsPerPage, totalItems) } of { totalItems } { itemText }
         </span>
     </div>
     <div class="cc-pagination-right">
