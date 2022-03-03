@@ -301,7 +301,7 @@
 
     console.assert(data || tiles || (flopsAny && memBw), "you must provide flopsAny and memBw or tiles!")
 
-    let ctx, canvasElement
+    let ctx, canvasElement, prevWidth = width, prevHeight = height
     data = data != null ? data : (flopsAny && memBw
         ? transformData(flopsAny, memBw, colorDots)
         : {
@@ -311,31 +311,35 @@
         })
 
     onMount(() => {
+        ctx = canvasElement.getContext('2d')
+        if (prevWidth != width || prevHeight != height) {
+            sizeChanged()
+            return
+        }
+
         canvasElement.width = width
         canvasElement.height = height
-        ctx = canvasElement.getContext('2d')
         render(ctx, data, cluster, width, height, colorDots, maxY)
     })
 
-    let timeoutId = null, prevWidth = width, prevHeight = height
+    let timeoutId = null
     function sizeChanged() {
+        if (!ctx)
+            return
+
         if (timeoutId != null)
             clearTimeout(timeoutId)
 
+        prevWidth = width
+        prevHeight = height
         timeoutId = setTimeout(() => {
-            timeoutId = null
             if (!canvasElement)
                 return
 
-            if (Math.abs(prevWidth - width) < 10)
-                return
-
+            timeoutId = null
             canvasElement.width = width
             canvasElement.height = height
-            ctx = canvasElement.getContext('2d')
             render(ctx, data, cluster, width, height, colorDots, maxY)
-            prevWidth = width
-            prevHeight = height
         }, 250)
     }
 
