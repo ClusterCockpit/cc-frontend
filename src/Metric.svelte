@@ -50,7 +50,6 @@
         </select>
     {/if}
 </InputGroup>
-<br>
 {#key series}
     <Timeseries
         bind:this={plot}
@@ -61,4 +60,4 @@
         series={series}
         statisticsSeries={data.statisticsSeries} />
 {/key}
-
+<br/>

@@ -57,7 +57,7 @@
                 grouped.set(metric.name, [metric.metric])
         }
 
-        return [...grouped.entries()]
+        return [...grouped.entries()].sort((a, b) => a[0].name.localeCompare(b[0].name))
     }
 </script>
 

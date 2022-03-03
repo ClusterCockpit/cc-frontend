@@ -65,5 +65,8 @@
                 </Button>
             </form>
         {/if}
+        <Button outline on:click={() => window.location.href = '/config'} style="margin-left: 10px;">
+            <Icon name="gear"/>
+        </Button>
     </div>
 </Navbar>

@@ -175,7 +175,7 @@ export function groupByScope(jobMetrics) {
             metrics.set(metric.name, [metric])
     }
 
-    return [...metrics.values()]
+    return [...metrics.values()].sort((a, b) => a[0].name.localeCompare(b[0].name))
 }
 
 const scopeGranularity = {
