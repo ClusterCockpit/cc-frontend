@@ -1,5 +1,5 @@
 <div class="cc-plot">
-    <canvas bind:this={canvasElement} width="{prevWidth}" height="{height}"></canvas>
+    <canvas bind:this={canvasElement} width="{prevWidth}" height="{prevHeight}"></canvas>
 </div>
 
 <script context="module">
@@ -287,7 +287,7 @@
 </script>
 
 <script>
-    import { onMount } from 'svelte'
+    import { onMount, tick } from 'svelte'
 
     export let flopsAny = null
     export let memBw = null
@@ -315,10 +315,9 @@
         canvasElement.height = height
         ctx = canvasElement.getContext('2d')
         render(ctx, data, cluster, width, height, colorDots, maxY)
-        prevWidth = width
     })
 
-    let timeoutId = null, prevWidth = width
+    let timeoutId = null, prevWidth = width, prevHeight = height
     function sizeChanged() {
         if (timeoutId != null)
             clearTimeout(timeoutId)
@@ -336,6 +335,7 @@
             ctx = canvasElement.getContext('2d')
             render(ctx, data, cluster, width, height, colorDots, maxY)
             prevWidth = width
+            prevHeight = height
         }, 250)
     }
 

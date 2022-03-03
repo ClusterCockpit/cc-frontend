@@ -113,7 +113,8 @@
                 itemsPerRow={ccconfig.plot_view_plotsPerRow}
                 items={$nodesQuery.data.nodeMetrics
                     .filter(h => h.host.includes(hostnameFilter) && h.metrics.some(m => m.name == selectedMetric && m.metric.scope == 'node'))
-                    .map(h => ({ host: h.host, data: h.metrics.find(m => m.name == selectedMetric && m.metric.scope == 'node') }))}>
+                    .map(h => ({ host: h.host, data: h.metrics.find(m => m.name == selectedMetric && m.metric.scope == 'node') }))
+                    .sort((a, b) => a.host.localeCompare(b.host))}>
 
                 <h4 style="width: 100%; text-align: center;"><a href="/monitoring/node/{cluster}/{item.host}">{item.host}</a></h4>
                 <MetricPlot
