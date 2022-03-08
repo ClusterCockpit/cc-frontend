@@ -1,6 +1,6 @@
 <script>
     import { init, groupByScope, fetchMetricsStore } from './utils.js'
-    import { Row, Col, Card, Spinner } from 'sveltestrap'
+    import { Row, Col, Card, Spinner, TabContent, TabPane } from 'sveltestrap'
     import PlotTable from './PlotTable.svelte'
     import Metric from './Metric.svelte'
     import PolarPlot from './plots/Polar.svelte'
@@ -20,7 +20,8 @@
             SMT, exclusive, partition, arrayJobId,
             monitoringStatus, state,
             tags { id, type, name },
-            resources { hostname, hwthreads, accelerators }
+            resources { hostname, hwthreads, accelerators },
+            metaData
         }
     `)
 
@@ -105,8 +106,33 @@
 <br/>
 <Row>
     <Col>
-        {#if $jobMetrics.data && $initq.data}
-            <StatsTable job={$initq.data.job} jobMetrics={$jobMetrics.data.jobMetrics} />
+        {#if $initq.data}
+        <TabContent>
+            <TabPane tabId="stats" tab="Statistics Table" active>
+                {#if $jobMetrics.data}
+                    <StatsTable job={$initq.data.job} jobMetrics={$jobMetrics.data.jobMetrics} />
+                {/if}
+            </TabPane>
+            <TabPane tabId="job-script" tab="Job Script">
+                <div class="pre-wrapper">
+                    {#if $initq.data.job.metaData?.jobScript}
+                        <pre><code>{$initq.data.job.metaData?.jobScript}</code></pre>
+                    {:else}
+                        <Card body color="warning">No MetaData available</Card>
+                    {/if}
+                </div>
+            </TabPane>
+        </TabContent>
         {/if}
     </Col>
 </Row>
+
+<style>
+    .pre-wrapper {
+        font-size: 1.1rem;
+        margin: 10px;
+        border: 1px solid #bbb;
+        border-radius: 5px;
+        padding: 5px;
+    }
+</style>
