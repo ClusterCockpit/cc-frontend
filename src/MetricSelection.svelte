@@ -16,6 +16,7 @@
     export let isOpen
     export let configName
     export let allMetrics = null
+    export let cluster = null
 
     const clusters = getContext('clusters'),
           onInit = getContext('on-init')
@@ -26,9 +27,10 @@
     onInit(() => {
         if (allMetrics == null) {
             allMetrics = new Set()
-            for (let cluster of clusters)
-                for (let metric of cluster.metricConfig)
-                    allMetrics.add(metric.name)
+            for (let c of clusters)
+                if (cluster == null || c.name == cluster)
+                    for (let metric of c.metricConfig)
+                        allMetrics.add(metric.name)
         }
 
         newMetricsOrder = [...allMetrics].filter(m => !metrics.includes(m))
@@ -67,7 +69,7 @@
         isOpen = false
 
         updateConfiguration({
-                name: configName,
+                name: cluster == null ? configName : `${configName}:${cluster}`,
                 value: JSON.stringify(metrics)
             })
             .then(res => {
@@ -110,9 +112,9 @@
                     {/if}
                     {metric}
                     <span style="float: right;">
-                        {clusters
+                        {cluster == null ? clusters
                             .filter(cluster => cluster.metricConfig.find(m => m.name == metric) != null)
-                            .map(cluster => cluster.name).join(', ')}
+                            .map(cluster => cluster.name).join(', ') : ''}
                     </span>
                 </li>
             {/each}

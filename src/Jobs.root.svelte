@@ -13,12 +13,13 @@
 
     const ccconfig = getContext('cc-config')
 
-    export let filterPresets
+    export let filterPresets = {}
 
-    let filters, jobList
-    let sorting = { field: 'startTime', order: 'DESC' }, isSortingOpen = false
-    let metrics = ccconfig.plot_list_selectedMetrics, isMetricsSelectionOpen = false
-    let matchedJobs = null
+    let filters, jobList, matchedJobs = null
+    let sorting = { field: 'startTime', order: 'DESC' }, isSortingOpen = false, isMetricsSelectionOpen = false
+    let metrics = filterPresets.cluster
+        ? ccconfig[`plot_list_selectedMetrics:${filterPresets.cluster}`] || ccconfig.plot_list_selectedMetrics
+        : ccconfig.plot_list_selectedMetrics
 
     // The filterPresets are handled by the Filters component,
     // so we need to wait for it to be ready before we can start a query.
@@ -80,6 +81,8 @@
     bind:sorting={sorting}
     bind:isOpen={isSortingOpen} />
 
-<MetricSelection configName="plot_list_selectedMetrics"
+<MetricSelection
+    cluster={filterPresets.cluster}
+    configName="plot_list_selectedMetrics"
     bind:metrics={metrics}
     bind:isOpen={isMetricsSelectionOpen} />
