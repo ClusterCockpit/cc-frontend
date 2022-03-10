@@ -31,6 +31,7 @@
     export let cluster
     export let metric
     export let useStatsSeries = null
+    export let scope = 'node'
 
     if (useStatsSeries == null)
         useStatsSeries = statisticsSeries != null
@@ -41,7 +42,7 @@
     const metricConfig = getContext('metrics')(cluster, metric)
     const clusterCockpitConfig = getContext('cc-config')
     const resizeSleepTime = 250
-    const peakLineColor = '#000000'
+    const normalLineColor = '#000000'
     const lineWidth = clusterCockpitConfig.plot_general_lineWidth / window.devicePixelRatio
     const lineColors = clusterCockpitConfig.plot_general_colorscheme
     const backgroundColors = { normal:  'rgba(255, 255, 255, 1.0)', caution: 'rgba(255, 128, 0, 0.3)', alert: 'rgba(255, 0, 0, 0.3)' }
@@ -68,6 +69,7 @@
     function backgroundColor() {
         if (clusterCockpitConfig.plot_general_colorBackground == false
             || !metricConfig
+            || scope != 'node'
             || !(series && series.every(s => s.statistics != null)))
             return backgroundColors.normal
 
@@ -102,8 +104,8 @@
     const maxX = longestSeries * timestep
     const maxY = metricConfig != null
         ? useStatsSeries
-            ? (statisticsSeries.max.reduce((max, x) => Math.max(max, x), metricConfig.peak) || metricConfig.peak)
-            : (series.reduce((max, series) => Math.max(max, series.statistics?.max), metricConfig.peak) || metricConfig.peak)
+            ? (statisticsSeries.max.reduce((max, x) => Math.max(max, x), metricConfig.normal) || metricConfig.normal)
+            : (series.reduce((max, series) => Math.max(max, series.statistics?.max), metricConfig.normal) || metricConfig.normal)
         : null
     const plotSeries = [{}]
     const plotData = [new Array(longestSeries)]
@@ -155,12 +157,12 @@
         padding: [5, 10, -20, 0],
         hooks: {
             draw: [(u) => {
-                if (!metricConfig)
+                if (!metricConfig || scope != 'node')
                     return
 
-                let y = u.valToPos(metricConfig.peak, 'y', true)
+                let y = u.valToPos(metricConfig.normal, 'y', true)
                 u.ctx.lineWidth = lineWidth
-                u.ctx.strokeStyle = peakLineColor
+                u.ctx.strokeStyle = normalLineColor
                 u.ctx.setLineDash([5, 5])
                 u.ctx.beginPath()
                 u.ctx.moveTo(u.bbox.left, y)

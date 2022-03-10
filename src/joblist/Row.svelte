@@ -82,6 +82,7 @@
                     width={plotWidth}
                     height={plotHeight}
                     timestep={metric.metric.timestep}
+                    scope={metric.metric.scope}
                     series={metric.metric.series}
                     statisticsSeries={metric.metric.statisticsSeries}
                     metric={metric.name}

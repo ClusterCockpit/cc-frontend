@@ -57,6 +57,7 @@
         width={width} height={height}
         cluster={clusters.find(c => c.name == cluster)} metric={metric}
         timestep={data.timestep}
+        scope={data.scope}
         series={series}
         statisticsSeries={data.statisticsSeries} />
 {/key}
