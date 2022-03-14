@@ -17,7 +17,7 @@
         job(id: "${dbid}") {
             id, jobId, user, project, cluster, startTime,
             duration, numNodes, numHWThreads, numAcc,
-            SMT, exclusive, partition, arrayJobId,
+            SMT, exclusive, partition, subCluster, arrayJobId,
             monitoringStatus, state,
             tags { id, type, name },
             resources { hostname, hwthreads, accelerators },
@@ -60,8 +60,8 @@
             <Roofline
                 width={fullWidth / 3 - 10} height={polarPlotSize}
                 cluster={clusters
-                    .find(c => c.name == $initq.data.job.cluster).partitions
-                    .find(p => p.name == $initq.data.job.partition)}
+                    .find(c => c.name == $initq.data.job.cluster).subClusters
+                    .find(sc => sc.name == $initq.data.job.subCluster)}
                 flopsAny={$jobMetrics.data.jobMetrics.find(m => m.name == 'flops_any' && m.metric.scope == 'node').metric}
                 memBw={$jobMetrics.data.jobMetrics.find(m => m.name == 'mem_bw' && m.metric.scope == 'node').metric} />
         </Col>

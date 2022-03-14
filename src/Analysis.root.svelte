@@ -43,7 +43,7 @@
             cluster = data.clusters.find(c => c.name == filterPresets.cluster)
             console.assert(cluster != null, `This cluster could not be found: ${filterPresets.cluster}`)
 
-            rooflineMaxY = cluster.partitions.reduce((max, part) => Math.max(max, part.flopRateSimd), 0)
+            rooflineMaxY = cluster.subClusters.reduce((max, part) => Math.max(max, part.flopRateSimd), 0)
             $rooflineQuery.variables.maxY = rooflineMaxY
             $rooflineQuery.context.pause = false
             $rooflineQuery.reexecute()
@@ -159,7 +159,7 @@
                     <h4>Top Users (by number of jobs)</h4>
                     <Histogram
                         width={colWidth - 25} height={300 * 0.5}
-                        data={$statsQuery.data.topUsers.map(({ count }, idx) => ({ count, value: idx }))}
+                        data={$statsQuery.data.topUsers.sort((a, b) => b.count - a.count).map(({ count }, idx) => ({ count, value: idx }))}
                         label={(x) => x < $statsQuery.data.topUsers.length ? $statsQuery.data.topUsers[Math.floor(x)].name : '0'} />
                 {/key}
             </div>
@@ -190,7 +190,7 @@
                     <Roofline
                         width={colWidth - 25} height={300}
                         tiles={$rooflineQuery.data.rooflineHeatmap}
-                        cluster={cluster.partitions.length == 1 ? cluster.partitions[0] : null}
+                        cluster={cluster.subClusters.length == 1 ? cluster.subClusters[0] : null}
                         maxY={rooflineMaxY} />
                 {/key}
             {/if}

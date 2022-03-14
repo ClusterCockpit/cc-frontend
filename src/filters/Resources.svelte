@@ -1,7 +1,6 @@
 <script>
     import { createEventDispatcher, getContext } from 'svelte'
-    import { Button, ListGroup, ListGroupItem,
-             Modal, ModalBody, ModalHeader, ModalFooter } from 'sveltestrap'
+    import { Button, Modal, ModalBody, ModalHeader, ModalFooter } from 'sveltestrap'
     import DoubleRangeSlider from './DoubleRangeSlider.svelte'
 
     const clusters = getContext('clusters'),
@@ -21,16 +20,16 @@
         || pendingNumAccelerators.from != numAccelerators.from || pendingNumAccelerators.to != numAccelerators.to
 
     const findMaxNumAccels = clusters => clusters.reduce((max, cluster) => Math.max(max,
-        cluster.partitions.reduce((max, partition) => Math.max(max, partition.topology.accelerators?.length || 0), 0)), 0)
+        cluster.subClusters.reduce((max, sc) => Math.max(max, sc.topology.accelerators?.length || 0), 0)), 0)
 
     let minNumNodes = 1, maxNumNodes = 0, minNumHWThreads = 1, maxNumHWThreads = 0, minNumAccelerators = 0, maxNumAccelerators = 0
     $: {
         if ($initialized) {
             if (cluster != null) {
-                const { filterRanges, partitions } = clusters.find(c => c.name == cluster)
+                const { filterRanges, subClusters } = clusters.find(c => c.name == cluster)
                 minNumNodes = filterRanges.numNodes.from
                 maxNumNodes = filterRanges.numNodes.to
-                maxNumAccelerators = findMaxNumAccels([{ partitions }])
+                maxNumAccelerators = findMaxNumAccels([{ subClusters }])
             } else if (clusters.length > 0) {
                 const { filterRanges } = clusters[0]
                 minNumNodes = filterRanges.numNodes.from

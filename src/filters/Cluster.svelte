@@ -18,7 +18,7 @@
 
 <Modal isOpen={isOpen} toggle={() => (isOpen = !isOpen)}>
     <ModalHeader>
-        Select Cluster & Partition
+        Select Cluster & Slurm Partition
     </ModalHeader>
     <ModalBody>
         {#if $initialized}
@@ -51,9 +51,9 @@
                 </ListGroupItem>
                 {#each clusters.find(c => c.name == pendingCluster).partitions as partition}
                     <ListGroupItem
-                        active={pendingPartition == partition.name}
-                        on:click={() => (pendingPartition = partition.name)}>
-                        {partition.name}
+                        active={pendingPartition == partition}
+                        on:click={() => (pendingPartition = partition)}>
+                        {partition}
                     </ListGroupItem>
                 {/each}
             </ListGroup>

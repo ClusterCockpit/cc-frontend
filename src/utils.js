@@ -46,7 +46,8 @@ export function init(extraInitQuery = '') {
                 numNodes  { from, to }
                 startTime { from, to }
             }
-            partitions {
+            partitions
+            subClusters {
                 name, processorType
                 socketsPerNode
                 coresPerSocket

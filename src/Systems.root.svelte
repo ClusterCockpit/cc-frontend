@@ -62,10 +62,11 @@
             <Roofline
                 width={colWidth - 25} height={300} colorDots={false}
                 data={transformPerNodeData($nodesQuery.data.nodeMetrics)}
-                maxY={clusters.find(c => c.name == cluster).partitions.reduce((max, part) => Math.max(max, part.flopRateSimd), 0)}/>
+                maxY={clusters.find(c => c.name == cluster).subClusters.reduce((max, sc) => Math.max(max, sc.flopRateSimd), 0)}/>
         {/key}
         </div>
     {/if}
+    <!-- <Card body color="warning">TODO: Per-SubCluster-Roofline-Model!</Card> -->
 </Row>
 <br/>
 <Row>

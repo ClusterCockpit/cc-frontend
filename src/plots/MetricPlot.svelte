@@ -102,7 +102,7 @@
         ? statisticsSeries.mean.length
         : series.reduce((n, series) => Math.max(n, series.data.length), 0)
     const maxX = longestSeries * timestep
-    const maxY = metricConfig != null
+    const maxY = metricConfig != null && scope == 'node'
         ? useStatsSeries
             ? (statisticsSeries.max.reduce((max, x) => Math.max(max, x), metricConfig.normal) || metricConfig.normal)
             : (series.reduce((max, series) => Math.max(max, series.statistics?.max), metricConfig.normal) || metricConfig.normal)
