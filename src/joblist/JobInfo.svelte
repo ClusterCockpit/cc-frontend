@@ -39,22 +39,30 @@
     {/if}
 
     <div class="fst-italic">
-        <a href="/monitoring/user/{job.user}" target="_blank">{job.user}</a>
-        {#if job.project && job.project != 'no project'}
-            ({job.project})
+        <a href="/monitoring/user/{job.user}" target="_blank">
+            {job.user}
+        </a>
+        {#if job.userData && job.userData.name}
+            ({job.userData.name})
         {/if}
     </div>
+
+    {#if job.project && job.project != 'no project'}
+        <p>{job.project}</p>
+    {/if}
 
     <p>
         {job.numNodes} node{job.numNodes == 1 ? '' : 's'}
     </p>
 
-    <div>Started at:</div>
-    <p class="fw-bold">{(new Date(job.startTime)).toLocaleString()}</p>
+    <p>
+        Started at:
+        <span class="fw-bold">{(new Date(job.startTime)).toLocaleString()}</span>
+    </p>
 
-    <div>Duration:</div>
-    <p class="fw-bold">
-        {formatDuration(job["duration"])}
+    <p>
+        Duration:
+        <span class="fw-bold">{formatDuration(job["duration"])}</span>
         {#if job.state == 'running'}
             <Badge color="success">running</Badge>
         {:else if job.state != 'completed'}

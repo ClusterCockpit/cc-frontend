@@ -102,6 +102,18 @@
                         <th scope="row">Username</th>
                         <td>{user.username}</td>
                     </tr>
+                    {#if user.name}
+                        <tr>
+                            <th scope="row">Name</th>
+                            <td>{user.name}</td>
+                        </tr>
+                    {/if}
+                    {#if user.email}
+                        <tr>
+                            <th scope="row">Email</th>
+                            <td>{user.email}</td>
+                        </tr>
+                    {/if}
                     <tr>
                         <th scope="row">Total Jobs</th>
                         <td>{$stats.data.jobsStatistics[0].totalJobs}</td>

@@ -37,6 +37,7 @@
                 SMT, exclusive, partition, arrayJobId,
                 monitoringStatus, state,
                 tags { id, type, name }
+                userData { name }
             }
             count
         }

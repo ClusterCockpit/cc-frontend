@@ -22,6 +22,7 @@
             tags { id, type, name },
             resources { hostname, hwthreads, accelerators },
             metaData
+            userData { name, email }
         }
     `)
 
