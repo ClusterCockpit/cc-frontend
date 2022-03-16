@@ -119,7 +119,16 @@
                     {#if $initq.data.job.metaData?.jobScript}
                         <pre><code>{$initq.data.job.metaData?.jobScript}</code></pre>
                     {:else}
-                        <Card body color="warning">No MetaData available</Card>
+                        <Card body color="warning">No job script available</Card>
+                    {/if}
+                </div>
+            </TabPane>
+            <TabPane tabId="slurm-info" tab="Slurm Info">
+                <div class="pre-wrapper">
+                    {#if $initq.data.job.metaData?.slurmInfo}
+                        <pre><code>{$initq.data.job.metaData?.slurmInfo}</code></pre>
+                    {:else}
+                        <Card body color="warning">No additional slurm information available</Card>
                     {/if}
                 </div>
             </TabPane>
