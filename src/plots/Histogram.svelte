@@ -176,10 +176,10 @@
 <script context="module">
     import { formatNumber } from '../utils.js'
 
-    export function binsFromFootprint(footprints, numBins) {
+    export function binsFromFootprint(weights, values, numBins) {
         let min = 0, max = 0
-        if (footprints.length != 0) {
-            for (let x of footprints) {
+        if (values.length != 0) {
+            for (let x of values) {
                 min = Math.min(min, x)
                 max = Math.max(max, x)
             }
@@ -190,8 +190,8 @@
             numBins = 3
 
         const bins = new Array(numBins).fill(0)
-        for (let x of footprints)
-            bins[Math.floor(((x - min) / (max - min)) * numBins)] += 1
+        for (let i = 0; i < values.length; i++)
+            bins[Math.floor(((values[i] - min) / (max - min)) * numBins)] += weights ? weights[i] : 1
 
         return {
             label: idx => {

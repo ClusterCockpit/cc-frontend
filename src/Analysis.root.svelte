@@ -68,8 +68,8 @@
     const footprintsQuery = operationStore(`
         query($filter: [JobFilter!]!, $metrics: [String!]!) {
             footprints: jobsFootprints(filter: $filter, metrics: $metrics) {
-                name,
-                footprints
+                nodehours,
+                metrics { metric, data }
             }
         }
     `, { filter: [], metrics }, { pause: true })
@@ -212,7 +212,8 @@
                 let:item
                 let:width
                 items={metricsInHistograms.map(metric => ({ metric, ...binsFromFootprint(
-                    $footprintsQuery.data.footprints.find(f => f.name == metric).footprints, numBins) }))}
+                    $footprintsQuery.data.footprints.nodehours,
+                    $footprintsQuery.data.footprints.metrics.find(f => f.metric == metric).data, numBins) }))}
                 itemsPerRow={ccconfig.plot_view_plotsPerRow}>
                 <h4>{item.metric} [{metricConfig(cluster.name, item.metric)?.unit}]</h4>
 
@@ -230,15 +231,15 @@
                 let:item
                 let:width
                 items={metricsInScatterplots.map(([m1, m2]) => ({
-                    m1, f1: $footprintsQuery.data.footprints.find(f => f.name == m1).footprints,
-                    m2, f2: $footprintsQuery.data.footprints.find(f => f.name == m2).footprints }))}
+                    m1, f1: $footprintsQuery.data.footprints.metrics.find(f => f.metric == m1).data,
+                    m2, f2: $footprintsQuery.data.footprints.metrics.find(f => f.metric == m2).data }))}
                 itemsPerRow={ccconfig.plot_view_plotsPerRow}>
 
                 <ScatterPlot
-                    width={width} height={250}
+                    width={width} height={250} color={"rgba(0, 102, 204, 0.33)"}
                     xLabel={`${item.m1} [${metricConfig(cluster.name, item.m1)?.unit}]`}
                     yLabel={`${item.m2} [${metricConfig(cluster.name, item.m2)?.unit}]`}
-                    X={item.f1} Y={item.f2} />
+                    X={item.f1} Y={item.f2} S={$footprintsQuery.data.footprints.nodehours} />
             </PlotTable>
         </Col>
     </Row>

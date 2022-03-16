@@ -92,6 +92,7 @@ export function init(extraInitQuery = '') {
         if (error != null) {
             console.error(error)
             state.error = error
+            tick().then(() => subscribers.forEach(cb => cb(state)))
             return
         }
 

@@ -31,7 +31,7 @@
         }
     }
 
-    function render(ctx, X, Y, xLabel, yLabel, width, height) {
+    function render(ctx, X, Y, S, color, xLabel, yLabel, width, height) {
         if (width <= 0)
             return;
 
@@ -56,7 +56,31 @@
             return Math.round((h - y * h) + paddingTop);
         };
 
+        // Draw Data
+        let size = 3
+        if (S) {
+            let max = S.reduce((max, s, i) => (X[i] == null || Y[i] == null || Number.isNaN(X[i]) || Number.isNaN(Y[i])) ? max : Math.max(max, s))
+            size = (w / 15) / max
+            console.log(size)
+        }
+
+        ctx.fillStyle = color;
+        for (let i = 0; i < X.length; i++) {
+            let x = X[i], y = Y[i];
+            if (x == null || y == null || Number.isNaN(x) || Number.isNaN(y))
+                continue;
+
+            const s = S ? S[i] * size : size;
+            const px = getCanvasX(x);
+            const py = getCanvasY(y);
+
+            ctx.beginPath();
+            ctx.arc(px, py, s, 0, Math.PI * 2, false);
+            ctx.fill();
+        }
+
         // Axes
+        ctx.fillStyle = '#000000'
         ctx.strokeStyle = axesColor;
         ctx.font = `${fontSize}px ${fontFamily}`;
         ctx.beginPath();
@@ -101,22 +125,6 @@
             ctx.restore();
         }
         ctx.stroke();
-
-        // Draw Data
-        ctx.fillStyle = '#0066cc';
-        for (let i = 0; i < X.length; i++) {
-            let x = X[i], y = Y[i];
-            if (x == null || y == null || Number.isNaN(x) || Number.isNaN(y))
-                continue;
-
-            const s = 3;
-            const px = getCanvasX(x);
-            const py = getCanvasY(y);
-
-            ctx.beginPath();
-            ctx.arc(px, py, s, 0, Math.PI * 2, false);
-            ctx.fill();
-        }
     }
 </script>
 
@@ -125,6 +133,8 @@
 
     export let X;
     export let Y;
+    export let S = null;
+    export let color = '#0066cc';
     export let width;
     export let height;
     export let xLabel;
@@ -132,15 +142,12 @@
 
     let ctx;
     let canvasElement;
-    let mounted = false;
 
     onMount(() => {
         canvasElement.width = width;
         canvasElement.height = height;
         ctx = canvasElement.getContext('2d');
-        mounted = true;
-
-        render(ctx, X, Y, xLabel, yLabel, width, height);
+        render(ctx, X, Y, S, color, xLabel, yLabel, width, height);
     });
 
     let timeoutId = null;
@@ -156,7 +163,7 @@
             canvasElement.width = width;
             canvasElement.height = height;
             ctx = canvasElement.getContext('2d');
-            render(ctx, X, Y, xLabel, yLabel, width, height);
+            render(ctx, X, Y, S, color, xLabel, yLabel, width, height);
         }, 250);
     }
 
