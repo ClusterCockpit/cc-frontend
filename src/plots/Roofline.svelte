@@ -188,10 +188,10 @@
             const ycut = 0.01 * cluster.memoryBandwidth
             const scalarKnee = (cluster.flopRateScalar - ycut) / cluster.memoryBandwidth
             const simdKnee = (cluster.flopRateSimd - ycut) / cluster.memoryBandwidth
-            const scalarKneeX = getCanvasX(scalarKnee)
-            const simdKneeX = getCanvasX(simdKnee)
-            const flopRateScalarY = getCanvasY(cluster.flopRateScalar)
-            const flopRateSimdY = getCanvasY(cluster.flopRateSimd)
+            const scalarKneeX = getCanvasX(scalarKnee),
+                  simdKneeX = getCanvasX(simdKnee),
+                  flopRateScalarY = getCanvasY(cluster.flopRateScalar),
+                  flopRateSimdY = getCanvasY(cluster.flopRateSimd)
 
             if (scalarKneeX < width - paddingRight) {
                 ctx.moveTo(scalarKneeX, flopRateScalarY)
@@ -203,14 +203,22 @@
                 ctx.lineTo(width - paddingRight, flopRateSimdY)
             }
 
-            const { x, y } = lineIntersect(
-                getCanvasX(0.01), getCanvasY(ycut),
-                getCanvasX(simdKnee), flopRateSimdY,
-                0, height - paddingBottom,
-                width, height - paddingBottom)
+            let x1 = getCanvasX(0.01),
+                y1 = getCanvasY(ycut),
+                x2 = getCanvasX(simdKnee),
+                y2 = flopRateSimdY
 
-            ctx.moveTo(x, y)
-            ctx.lineTo(getCanvasX(simdKnee), flopRateSimdY)
+            let xAxisIntersect = lineIntersect(
+                x1, y1, x2, y2,
+                0, height - paddingBottom, width, height - paddingBottom)
+
+            if (xAxisIntersect.x > x1) {
+                x1 = xAxisIntersect.x
+                y1 = xAxisIntersect.y
+            }
+
+            ctx.moveTo(x1, y1)
+            ctx.lineTo(x2, y2)
         }
         ctx.stroke()
 
