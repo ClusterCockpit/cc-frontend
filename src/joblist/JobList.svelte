@@ -38,6 +38,7 @@
                 monitoringStatus, state,
                 tags { id, type, name }
                 userData { name }
+                metaData
             }
             count
         }
