@@ -208,6 +208,14 @@
 {:else if $footprintsQuery.data && $initq.data}
     <Row>
         <Col>
+            <Card body>
+                These histograms show the distribution of the averages of all jobs matching the filters. Each job/average is weighted by its node hours.
+            </Card>
+            <br/>
+        </Col>
+    </Row>
+    <Row>
+        <Col>
             <PlotTable
                 let:item
                 let:width
@@ -225,6 +233,14 @@
         </Col>
     </Row>
     <br/>
+    <Row>
+        <Col>
+            <Card body>
+                Each circle represents one job. The size of a circle is proportional to its node hours. Darker circles mean multiple jobs have the same averages for the respective metrics.
+            </Card>
+            <br/>
+        </Col>
+    </Row>
     <Row>
         <Col>
             <PlotTable

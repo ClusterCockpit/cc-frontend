@@ -59,9 +59,8 @@
         // Draw Data
         let size = 3
         if (S) {
-            let max = S.reduce((max, s, i) => (X[i] == null || Y[i] == null || Number.isNaN(X[i]) || Number.isNaN(Y[i])) ? max : Math.max(max, s))
+            let max = S.reduce((max, s, i) => (X[i] == null || Y[i] == null || Number.isNaN(X[i]) || Number.isNaN(Y[i])) ? max : Math.max(max, s), 0)
             size = (w / 15) / max
-            console.log(size)
         }
 
         ctx.fillStyle = color;
