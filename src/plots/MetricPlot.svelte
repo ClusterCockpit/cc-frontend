@@ -157,10 +157,20 @@
         padding: [5, 10, -20, 0],
         hooks: {
             draw: [(u) => {
-                if (!metricConfig || scope != 'node')
+                // Draw plot type label:
+                let text = `${scope}${useStatsSeries ? ': min/avg/max' : ''}`
+                u.ctx.save()
+                u.ctx.textAlign = 'end'
+                u.ctx.fillStyle = 'black'
+                u.ctx.fillText(text, u.bbox.left + u.bbox.width - 10, u.bbox.top + u.bbox.height - 10)
+
+                if (!metricConfig || scope != 'node') {
+                    u.ctx.restore()
                     return
+                }
 
                 let y = u.valToPos(metricConfig.normal, 'y', true)
+                u.ctx.save()
                 u.ctx.lineWidth = lineWidth
                 u.ctx.strokeStyle = normalLineColor
                 u.ctx.setLineDash([5, 5])
@@ -168,7 +178,7 @@
                 u.ctx.moveTo(u.bbox.left, y)
                 u.ctx.lineTo(u.bbox.left + u.bbox.width, y)
                 u.ctx.stroke()
-                u.ctx.setLineDash([])
+                u.ctx.restore()
             }]
         },
         scales: {
