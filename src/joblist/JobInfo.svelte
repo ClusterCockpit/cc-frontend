@@ -26,7 +26,7 @@
 <div>
     <div class="fw-bold">
         <a href="/monitoring/job/{job.id}" target="_blank">{job.jobId}</a>
-        (job.cluster)
+        ({job.cluster})
     </div>
 
     {#if job.metaData?.jobName}
