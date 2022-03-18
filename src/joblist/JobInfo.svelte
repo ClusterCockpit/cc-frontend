@@ -26,8 +26,14 @@
 <div>
     <div class="fw-bold">
         <a href="/monitoring/job/{job.id}" target="_blank">{job.jobId}</a>
-        ({job.metaData?.jobName ? `${job.metaData.jobName}, ${job.cluster}` : job.cluster})
+        (job.cluster)
     </div>
+
+    {#if job.metaData?.jobName}
+        <p>
+        {job.metaData.jobName}
+        <p>
+    {/if}
 
     {#if job.arrayJobId}
         <p>
