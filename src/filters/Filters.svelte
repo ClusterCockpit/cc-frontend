@@ -22,12 +22,14 @@
     import Duration from './Duration.svelte'
     import Resources from './Resources.svelte'
     import Statistics from './Stats.svelte'
+    import TimeSelection from './TimeSelection.svelte'
 
     const dispatch = createEventDispatcher()
 
     export let menuText = null
     export let filterPresets = {}
     export let disableClusterSelection = false
+    export let startTimeQuickSelect = false
 
     let filters = {
         projectMatch: filterPresets.projectMatch || 'contains',
@@ -35,7 +37,7 @@
 
         cluster:    filterPresets.cluster    || null,
         partition:  filterPresets.partition  || null,
-        states:     filterPresets.states     || filterPresets.state ? [filterPresets.state] : allJobStates,
+        states:     filterPresets.states     || filterPresets.state ? [filterPresets.state].flat() : allJobStates,
         startTime:  filterPresets.startTime  || { from: null, to: null },
         tags:       filterPresets.tags       || [],
         duration:   filterPresets.duration   || { from: null, to: null },
@@ -96,12 +98,42 @@
             items.push({ [stat.field]: { from: stat.from, to: stat.to } })
 
         dispatch('update', { filters: items })
+        changeURL()
         return items
+    }
+
+    function changeURL() {
+        const dateToUnixEpoch = (rfc3339) => Math.floor(Date.parse(rfc3339) / 1000)
+
+        let opts = []
+        if (filters.cluster)
+            opts.push(`cluster=${filters.cluster}`)
+        if (filters.partition)
+            opts.push(`partition=${filters.partition}`)
+        if (filters.states.length != allJobStates.length)
+            for (let state of filters.states)
+                opts.push(`state=${state}`)
+        if (filters.startTime.from && filters.startTime.to)
+            opts.push(`startTime=${dateToUnixEpoch(filters.startTime.from)}-${dateToUnixEpoch(filters.startTime.to)}`)
+        for (let tag of filters.tags)  
+            opts.push(`tag=${tag}`)
+        if (filters.duration.from && filters.duration.to)
+            opts.push(`duration=${filters.duration.from}-${filters.duration.to}`)
+        if (filters.numNodes.from && filters.numNodes.to)
+            opts.push(`numNodes=${filters.numNodes.from}-${filters.numNodes.to}`)
+        if (filters.numAccelerators.from && filters.numAccelerators.to)
+            opts.push(`numAccelerators=${filters.numAccelerators.from}-${filters.numAccelerators.to}`)
+
+        if (opts.length == 0 && window.location.search.length <= 1)
+            return
+
+        let newurl = `${window.location.pathname}?${opts.join('&')}`
+        window.history.replaceState(null, '', newurl)
     }
 </script>
 
 <Row>
-    <Col>
+    <Col xs="auto">
         <ButtonDropdown class="cc-dropdown-on-hover">
             <DropdownToggle outline caret color="success">
                 <Icon name="sliders"/>
@@ -138,7 +170,29 @@
                 </DropdownItem>
             </DropdownMenu>
         </ButtonDropdown>
-
+    </Col>
+    {#if startTimeQuickSelect}
+        <Col xs="auto">
+            <TimeSelection customEnabled={false} anyEnabled={true}
+                from={filters.startTime.from ? new Date(filters.startTime.from) : null}
+                to={filters.startTime.to ? new Date(filters.startTime.to) : null}
+                options={{
+                    'Last 6hrs': 6*60*60,
+                    'Last 12hrs': 12*60*60,
+                    'Last 24hrs': 24*60*60,
+                    'Last 48hrs': 48*60*60,
+                    'Last 7 days': 7*24*60*60,
+                    'Last 30 days': 30*24*60*60}}
+                on:change={({ detail: { from, to } }) => {
+                    filters.startTime.from = from?.toISOString()
+                    filters.startTime.to = to?.toISOString()
+                    console.log(filters.startTime)
+                    update()
+                }}
+                />
+        </Col>
+    {/if}
+    <Col xs="auto">
         {#if filters.cluster}
             <Info icon="cpu" on:click={() => (isClusterOpen = true)}>
                 {filters.cluster}

@@ -4,46 +4,72 @@
 
     export let from
     export let to
+    export let customEnabled = true
+    export let anyEnabled = false
+    export let options = {
+        'Last half hour': 30*60,
+        'Last hour': 60*60,
+        'Last 2hrs': 2*60*60,
+        'Last 4hrs': 4*60*60,
+        'Last 12hrs': 12*60*60,
+        'Last 24hrs': 24*60*60
+    }
+
+    $: pendingFrom = from
+    $: pendingTo = to
 
     const dispatch = createEventDispatcher()
-    let timeRange = (to.getTime() - from.getTime()) / 1000
+    let timeRange = to && from
+        ? (to.getTime() - from.getTime()) / 1000
+        : (anyEnabled ? -2 : -1)
 
     function updateTimeRange(event) {
         if (timeRange == -1) {
-            from = null
-            to = null
+            pendingFrom = null
+            pendingTo = null
+            return
+        }
+        if (timeRange == -2) {
+            from = pendingFrom = null
+            to = pendingTo = null
+            dispatch('change', { from, to })
             return
         }
 
         let now = Date.now(), t = timeRange * 1000
-        from = new Date(now - t)
-        to = new Date(now)
+        from = pendingFrom = new Date(now - t)
+        to = pendingTo = new Date(now)
         dispatch('change', { from, to })
     }
 
     function updateExplicitTimeRange(type, event) {
         let d = new Date(Date.parse(event.target.value));
-        if (type == 'from') from = d
-        else                to = d
+        if (type == 'from') pendingFrom = d
+        else                pendingTo = d
 
-        if (from != null && to != null)
+        if (pendingFrom != null && pendingTo != null) {
+            from = pendingFrom
+            to = pendingTo
             dispatch('change', { from, to })
+        }
     }
 </script>
 
-<InputGroup>
+<InputGroup class="inline-from">
     <InputGroupText><Icon name="clock-history"/></InputGroupText>
-    <InputGroupText>
+    <!-- <InputGroupText>
         Time
-    </InputGroupText>
+    </InputGroupText> -->
     <select class="form-select" bind:value={timeRange} on:change={updateTimeRange}>
-        <option value={-1}>Custom</option>
-        <option value={30 * 60}>Last half hour</option>
-        <option value={60 * 60}>Last hour</option>
-        <option value={2 * 60 * 60}>Last 2hrs</option>
-        <option value={4 * 60 * 60}>Last 4hrs</option>
-        <option value={24 * 60 * 60}>Last day</option>
-        <option value={7 * 24 * 60 * 60}>Last week</option>
+        {#if customEnabled}
+            <option value={-1}>Custom</option>            
+        {/if}
+        {#if anyEnabled}
+            <option value={-2}>Any</option>
+        {/if}
+        {#each Object.entries(options) as [name, seconds]}
+            <option value={seconds}>{name}</option>
+        {/each}
     </select>
     {#if timeRange == -1}
         <InputGroupText>from</InputGroupText>
