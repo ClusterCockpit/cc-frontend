@@ -39,7 +39,8 @@ export function init(extraInitQuery = '') {
             metricConfig {
                 name, unit, peak,
                 normal, caution, alert,
-                timestep, scope
+                timestep, scope,
+                aggregation
             }
             filterRanges {
                 duration  { from, to }
@@ -55,7 +56,10 @@ export function init(extraInitQuery = '') {
                 flopRateScalar
                 flopRateSimd
                 memoryBandwidth
-                topology { accelerators { id } }
+                topology {
+                    node, socket, core
+                    accelerators { id }
+                }
             }
         }
         tags { id, name, type }

@@ -13,6 +13,7 @@
 
     export let hosts
     export let cluster
+    export let subCluster = null
     export let metric
     export let atAllScopes
     export let width
@@ -55,9 +56,9 @@
         bind:this={plot}
         useStatsSeries={false}
         width={width} height={height}
-        cluster={clusters.find(c => c.name == cluster)} metric={metric}
+        cluster={clusters.find(c => c.name == cluster)} subCluster={subCluster}
         timestep={data.timestep}
-        scope={data.scope}
+        scope={data.scope} metric={metric}
         series={series}
         statisticsSeries={data.statisticsSeries} />
 {/key}

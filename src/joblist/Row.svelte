@@ -21,7 +21,7 @@
     export let plotWidth
     export let plotHeight = 225
 
-    let scopes = [job.numNodes == 1 ? 'hwthread' : 'node']
+    let scopes = [job.numNodes == 1 ? 'core' : 'node']
 
     const cluster = getContext('clusters').find(c => c.name == job.cluster)
 
@@ -86,7 +86,8 @@
                     series={metric.metric.series}
                     statisticsSeries={metric.metric.statisticsSeries}
                     metric={metric.name}
-                    cluster={cluster} />
+                    cluster={cluster}
+                    subCluster={job.subCluster} />
             {:else}
                 <Card body color="warning">Missing Data</Card>
             {/if}

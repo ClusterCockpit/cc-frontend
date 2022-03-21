@@ -97,6 +97,7 @@
                     bind:this={plots[item[0].name]}
                     hosts={$initq.data.job.resources.map(r => r.hostname)}
                     cluster={$initq.data.job.cluster}
+                    subCluster={$initq.data.job.subCluster}
                     metric={item[0].name}
                     atAllScopes={item.map(x => x.metric)}
                     width={width}/>
