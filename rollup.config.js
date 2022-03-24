@@ -39,19 +39,10 @@ const plugins = [
 const entrypoint = (name, path) => ({
 	input: path,
 	output: {
-		sourcemap: true,
+		sourcemap: false,
 		format: 'iife',
 		name: 'app',
-		file: `public/build/${name}.js`,
-
-		// Used so that the svelte components can be used
-		// with or without the ClusterCockpit PHP Backend:
-		intro:
-			process.env.CCFRONTEND_ROLLUP_INTRO != null
-				? process.env.CCFRONTEND_ROLLUP_INTRO
-				: "const JOBVIEW_URL = job => `/monitoring/job/${job.id}`;\n"+
-				  "const USERVIEW_URL = user => `/monitoring/user/${user}`;\n"+
-				  "const TAG_URL = tag => `/monitoring/jobs/?tag=${tag.id}`;\n"
+		file: `public/build/${name}.js`
 	},
 	plugins: [
 		...plugins,
@@ -73,6 +64,7 @@ export default [
 	entrypoint('job',      'src/job.entrypoint.js'),
 	entrypoint('systems',  'src/systems.entrypoint.js'),
 	entrypoint('node',     'src/node.entrypoint.js'),
-	entrypoint('analysis', 'src/analysis.entrypoint.js')
+	entrypoint('analysis', 'src/analysis.entrypoint.js'),
+	entrypoint('status',   'src/status.entrypoint.js')
 ];
 

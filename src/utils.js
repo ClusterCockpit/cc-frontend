@@ -56,6 +56,7 @@ export function init(extraInitQuery = '') {
                 flopRateScalar
                 flopRateSimd
                 memoryBandwidth
+                numberOfNodes
                 topology {
                     node, socket, core
                     accelerators { id }

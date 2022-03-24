@@ -31,7 +31,7 @@
     let ctx, canvasElement
 
     const maxCount = data.reduce((max, point) => Math.max(max, point.count), 0),
-          maxValue = data.reduce((max, point) => Math.max(max, point.value), 0)
+          maxValue = data.reduce((max, point) => Math.max(max, point.value), 0.1)
 
     function getStepSize(valueRange, pixelRange, minSpace) {
         const proposition = valueRange / (pixelRange / minSpace)
@@ -75,6 +75,9 @@
         const h = height - paddingTop - paddingBottom
         const w = width - paddingLeft - paddingRight
         const barWidth = Math.ceil(w / (maxValue + 1))
+
+        if (Number.isNaN(barWidth))
+            return
 
         const getCanvasX = (value) => (value / maxValue) * (w - barWidth) + paddingLeft + (barWidth / 2.)
         const getCanvasY = (count) => (h - (count / maxCount) * h) + paddingTop

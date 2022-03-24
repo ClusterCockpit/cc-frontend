@@ -1,0 +1,119 @@
+<script>
+    import Refresher from './joblist/Refresher.svelte'
+    import Roofline, { transformPerNodeData } from './plots/Roofline.svelte'
+    import Histogram from './plots/Histogram.svelte'
+    import { Row, Col, Spinner, Card, Table } from 'sveltestrap'
+    import { init } from './utils.js'
+    import { operationStore, query } from '@urql/svelte'
+
+    const { query: initq } = init()
+
+    export let cluster
+
+    let plotWidths = [], colWidth = 0
+
+    let from = new Date(Date.now() - 5 * 60 * 1000), to = new Date(Date.now())
+    const mainQuery = operationStore(`query($cluster: String!, $filter: [JobFilter!]!, $metrics: [String!], $from: Time!, $to: Time!) {
+        nodeMetrics(cluster: $cluster, metrics: $metrics, from: $from, to: $to) {
+            host,
+            subCluster,
+            metrics {
+                name,
+                metric {
+                    scope
+                    timestep,
+                    series { data }
+                }
+            }
+        }
+
+        allocatedNodes(cluster: $cluster)                                    { name, count }
+        topUsers:    jobsCount(filter: $filter, groupBy: USER,    limit: 10) { name, count }
+        topProjects: jobsCount(filter: $filter, groupBy: PROJECT, limit: 10) { name, count }
+    }`, {
+        cluster: cluster,
+        metrics: ['flops_any', 'mem_bw'],
+        from: from.toISOString(),
+        to: to.toISOString(),
+        filter: [{ state: ['running'] }, { cluster: { eq: cluster } }]
+    })
+
+    const sumUp = (data, subcluster, metric) => data.reduce((sum, node) => node.subCluster == subcluster
+        ? sum + (node.metrics.find(m => m.name == metric)?.metric.series.reduce((sum, series) => sum + series.data[series.data.length - 1], 0) || 0)
+        : sum, 0)
+
+    query(mainQuery)
+
+    $: console.log($mainQuery)
+</script>
+
+<Row>
+    <Col xs="auto">
+        {#if $initq.fetching || $mainQuery.fetching}
+            <Spinner/>
+        {:else if $initq.error}
+            <Card body color="danger">{$initq.error.message}</Card>
+        {:else}
+            <!-- ... -->
+        {/if}
+    </Col>
+    <Col xs="auto" style="margin-left: auto;">
+        <Refresher initially={120} on:reload={() => {
+            console.log('reload...')
+
+            from = new Date(Date.now() - 5 * 60 * 1000)
+            to = new Date(Date.now())
+
+            $mainQuery.variables = { ...$mainQuery.variables, from: from, to: to }
+            $mainQuery.reexecute({ requestPolicy: 'network-only' })
+        }} />
+    </Col>
+</Row>
+
+{#if $initq.data && $mainQuery.data}
+    {#each $initq.data.clusters.find(c => c.name == cluster).subClusters as subCluster, i}
+        <Row>
+            <Col xs="3">
+                <Table>
+                    <tr>
+                        <th scope="col">SubCluster</th>
+                        <td>{subCluster.name}</td>
+                    </tr>
+                    <tr>
+                        <th scope="col">Allocated Nodes</th>
+                        <td> {$mainQuery.data.allocatedNodes.find(({ name }) => name == subCluster.name)?.count} / {subCluster.numberOfNodes}</td>
+                    </tr>
+                    <tr>
+                        <th scope="col">Flop Rate</th>
+                        <td> {Math.floor(sumUp($mainQuery.data.nodeMetrics, subCluster.name, 'flops_any') * 100) / 100} / {subCluster.flopRateSimd * subCluster.numberOfNodes}</td>
+                    </tr>
+                    <tr>
+                        <th scope="col">MemBw Rate</th>
+                        <td> {Math.floor(sumUp($mainQuery.data.nodeMetrics, subCluster.name, 'mem_bw') * 100) / 100} / {subCluster.memoryBandwidth * subCluster.numberOfNodes}</td>
+                    </tr>
+                </Table>
+            </Col>
+            <div class="col-9" bind:clientWidth={plotWidths[i]}>
+                <Roofline
+                    width={plotWidths[i] - 10} height={300} colorDots={false} cluster={subCluster}
+                    data={transformPerNodeData($mainQuery.data.nodeMetrics.filter(data => data.subCluster == subCluster.name))} />
+            </div>
+        </Row>
+    {/each}
+    <Row>
+        <div class="col" bind:clientWidth={colWidth}>
+            <h4>Top Users</h4>
+            <Histogram
+                width={colWidth - 25} height={300 * 0.5}
+                data={$mainQuery.data.topUsers.sort((a, b) => b.count - a.count).map(({ count }, idx) => ({ count, value: idx }))}
+                label={(x) => x < $mainQuery.data.topUsers.length ? $mainQuery.data.topUsers[Math.floor(x)].name : '0'} />
+        </div>
+        <div class="col">
+            <h4>Top Projects</h4>
+            <Histogram
+                width={colWidth - 25} height={300 * 0.5}
+                data={$mainQuery.data.topProjects.sort((a, b) => b.count - a.count).map(({ count }, idx) => ({ count, value: idx }))}
+                label={(x) => x < $mainQuery.data.topProjects.length ? $mainQuery.data.topProjects[Math.floor(x)].name : '0'} />
+        </div>
+    </Row>
+{/if}
