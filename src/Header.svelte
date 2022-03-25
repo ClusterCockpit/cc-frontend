@@ -20,7 +20,7 @@
     const viewsPerCluster = [
         { title: 'Analysis', adminOnly: true,  href: '/monitoring/analysis/', icon: 'graph-up' },
         { title: 'Systems',  adminOnly: true,  href: '/monitoring/systems/',  icon: 'cpu' },
-        // { title: 'Status',   adminOnly: true,  href: '/monitoring/status/',   icon: 'cpu' },
+        { title: 'Status',   adminOnly: true,  href: '/monitoring/status/',   icon: 'cpu' },
     ]
 </script>
 

@@ -61,7 +61,7 @@
                 histNumNodes { count, value }
             }
 
-            topUsers: jobsCount(filter: $filter, groupBy: USER, limit: 5) { name, count }
+            topUsers: jobsCount(filter: $filter, groupBy: USER, weight: NODE_HOURS, limit: 5) { name, count }
         }
     `, { filter: [] }, { pause: true })
 
@@ -156,7 +156,7 @@
             </div>
             <div style="height: 60%;">
                 {#key $statsQuery.data.topUsers}
-                    <h4>Top Users (by number of jobs)</h4>
+                    <h4>Top Users (by node hours)</h4>
                     <Histogram
                         width={colWidth - 25} height={300 * 0.5}
                         data={$statsQuery.data.topUsers.sort((a, b) => b.count - a.count).map(({ count }, idx) => ({ count, value: idx }))}

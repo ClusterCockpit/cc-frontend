@@ -27,9 +27,9 @@
             }
         }
 
-        allocatedNodes(cluster: $cluster)                                    { name, count }
-        topUsers:    jobsCount(filter: $filter, groupBy: USER,    limit: 10) { name, count }
-        topProjects: jobsCount(filter: $filter, groupBy: PROJECT, limit: 10) { name, count }
+        allocatedNodes(cluster: $cluster)                                                        { name, count }
+        topUsers:    jobsCount(filter: $filter, groupBy: USER,    weight: NODE_COUNT, limit: 10) { name, count }
+        topProjects: jobsCount(filter: $filter, groupBy: PROJECT, weight: NODE_COUNT, limit: 10) { name, count }
     }`, {
         cluster: cluster,
         metrics: ['flops_any', 'mem_bw'],
@@ -69,7 +69,13 @@
         }} />
     </Col>
 </Row>
-
+{#if $mainQuery.error}
+    <Row>
+        <Col>
+            <Card body color="danger">{$mainQuery.error.message}</Card>
+        </Col>
+    </Row>
+{/if}
 {#if $initq.data && $mainQuery.data}
     {#each $initq.data.clusters.find(c => c.name == cluster).subClusters as subCluster, i}
         <Row>
