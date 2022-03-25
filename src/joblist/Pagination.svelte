@@ -27,13 +27,13 @@
     </div>
     <div class="cc-pagination-right">
         {#if !backButtonDisabled}
-        <button class="reset nav" role="button" type="button"
+        <button class="reset nav" type="button"
             on:click|preventDefault="{reset}"></button>
-        <button class="left nav" role="button" type="button"
+        <button class="left nav" type="button"
             on:click|preventDefault="{() => { page -= 1; }}"></button>
         {/if}
         {#if !nextButtonDisabled}
-        <button class="right nav" role="button" type="button"
+        <button class="right nav" type="button"
             on:click|preventDefault="{() => { page += 1; }}"></button>
         {/if}
     </div>
