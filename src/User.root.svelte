@@ -71,6 +71,7 @@
     <Col xs="auto">
         <Filters
             filterPresets={filterPresets}
+            startTimeQuickSelect={true}
             bind:this={filters}
             on:update={({ detail }) => {
                 let filters = [...detail.filters, { user: { eq: user.username } }]

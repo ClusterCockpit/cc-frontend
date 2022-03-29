@@ -114,6 +114,7 @@
             bind:this={filters}
             filterPresets={filterPresets}
             disableClusterSelection={true}
+            startTimeQuickSelect={true}
             on:update={({ detail }) => {
                 $statsQuery.context.pause = false
                 $statsQuery.variables = { filter: detail.filters }

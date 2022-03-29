@@ -22,7 +22,7 @@
     import Duration from './Duration.svelte'
     import Resources from './Resources.svelte'
     import Statistics from './Stats.svelte'
-    import TimeSelection from './TimeSelection.svelte'
+    // import TimeSelection from './TimeSelection.svelte'
 
     const dispatch = createEventDispatcher()
 
@@ -123,6 +123,14 @@
             opts.push(`numNodes=${filters.numNodes.from}-${filters.numNodes.to}`)
         if (filters.numAccelerators.from && filters.numAccelerators.to)
             opts.push(`numAccelerators=${filters.numAccelerators.from}-${filters.numAccelerators.to}`)
+        if (filters.user)
+            opts.push(`user=${filters.user}`)
+        if (filters.userMatch != 'contains')
+            opts.push(`userMatch=${filters.userMatch}`)
+        if (filters.project)
+            opts.push(`project=${filters.project}`)
+        if (filters.projectMatch != 'contains')
+            opts.push(`projectMatch=${filters.projectMatch}`)
 
         if (opts.length == 0 && window.location.search.length <= 1)
             return
@@ -168,10 +176,30 @@
                 <DropdownItem on:click={() => (isStatsOpen = true)}>
                     <Icon name="bar-chart" on:click={() => (isStatsOpen = true)}/> Statistics
                 </DropdownItem>
+                {#if startTimeQuickSelect}
+                    <DropdownItem divider/>
+                    <DropdownItem disabled>Start Time Qick Selection</DropdownItem>
+                    {#each [
+                        { text: 'Last 6hrs',    seconds: 6*60*60 },
+                        { text: 'Last 12hrs',   seconds: 12*60*60 },
+                        { text: 'Last 24hrs',   seconds: 24*60*60 },
+                        { text: 'Last 48hrs',   seconds: 48*60*60 },
+                        { text: 'Last 7 days',  seconds: 7*24*60*60 },
+                        { text: 'Last 30 days', seconds: 30*24*60*60 }
+                    ] as {text, seconds}}
+                        <DropdownItem on:click={() => {
+                            filters.startTime.from = (new Date(Date.now() - seconds * 1000)).toISOString()
+                            filters.startTime.to = (new Date(Date.now())).toISOString()
+                            update()
+                        }}>
+                            <Icon name="calendar-range"/> {text}
+                        </DropdownItem>
+                    {/each}
+                {/if}
             </DropdownMenu>
         </ButtonDropdown>
     </Col>
-    {#if startTimeQuickSelect}
+    <!-- {#if startTimeQuickSelect}
         <Col xs="auto">
             <TimeSelection customEnabled={false} anyEnabled={true}
                 from={filters.startTime.from ? new Date(filters.startTime.from) : null}
@@ -191,7 +219,7 @@
                 }}
                 />
         </Col>
-    {/if}
+    {/if} -->
     <Col xs="auto">
         {#if filters.cluster}
             <Info icon="cpu" on:click={() => (isClusterOpen = true)}>
