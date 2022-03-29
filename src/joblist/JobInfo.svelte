@@ -65,7 +65,10 @@
 
     <p>
         Duration:
-        <span class="fw-bold">{formatDuration(job["duration"])}</span>
+        <span class="fw-bold">{formatDuration(job.duration)}</span>
+        {#if job.walltime}
+            (walltime: <span class="fw-bold">{formatDuration(job.walltime)}</span>)
+        {/if}
         {#if job.state == 'running'}
             <Badge color="success">running</Badge>
         {:else if job.state != 'completed'}
