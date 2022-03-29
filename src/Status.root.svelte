@@ -2,7 +2,7 @@
     import Refresher from './joblist/Refresher.svelte'
     import Roofline, { transformPerNodeData } from './plots/Roofline.svelte'
     import Histogram from './plots/Histogram.svelte'
-    import { Row, Col, Spinner, Card, Table } from 'sveltestrap'
+    import { Row, Col, Spinner, Card, Table, Progress } from 'sveltestrap'
     import { init } from './utils.js'
     import { operationStore, query } from '@urql/svelte'
 
@@ -42,9 +42,17 @@
         ? sum + (node.metrics.find(m => m.name == metric)?.metric.series.reduce((sum, series) => sum + series.data[series.data.length - 1], 0) || 0)
         : sum, 0)
 
-    query(mainQuery)
+    let allocatedNodes = {}, flopRate = {}, memBwRate = {}
+    $: if ($initq.data && $mainQuery.data) {
+        let subClusters = $initq.data.clusters.find(c => c.name == cluster).subClusters
+        for (let subCluster of subClusters) {
+            allocatedNodes[subCluster.name] = $mainQuery.data.allocatedNodes.find(({ name }) => name == subCluster.name)?.count || 0
+            flopRate[subCluster.name] = Math.floor(sumUp($mainQuery.data.nodeMetrics, subCluster.name, 'flops_any') * 100) / 100
+            memBwRate[subCluster.name] = Math.floor(sumUp($mainQuery.data.nodeMetrics, subCluster.name, 'mem_bw') * 100) / 100
+        }
+    }
 
-    $: console.log($mainQuery)
+    query(mainQuery)
 </script>
 
 <Row>
@@ -83,19 +91,22 @@
                 <Table>
                     <tr>
                         <th scope="col">SubCluster</th>
-                        <td>{subCluster.name}</td>
+                        <td colspan="2">{subCluster.name}</td>
                     </tr>
                     <tr>
                         <th scope="col">Allocated Nodes</th>
-                        <td> {$mainQuery.data.allocatedNodes.find(({ name }) => name == subCluster.name)?.count} / {subCluster.numberOfNodes}</td>
+                        <td style="min-width: 75px;"><div class="col"><Progress value={allocatedNodes[subCluster.name]} max={subCluster.numberOfNodes}/></div></td>
+                        <td>({allocatedNodes[subCluster.name]} / {subCluster.numberOfNodes})</td>
                     </tr>
                     <tr>
                         <th scope="col">Flop Rate</th>
-                        <td> {Math.floor(sumUp($mainQuery.data.nodeMetrics, subCluster.name, 'flops_any') * 100) / 100} / {subCluster.flopRateSimd * subCluster.numberOfNodes}</td>
+                        <td style="min-width: 75px;"><div class="col"><Progress value={flopRate[subCluster.name]} max={subCluster.flopRateSimd * subCluster.numberOfNodes}/></div></td>
+                        <td>({flopRate[subCluster.name]} / {subCluster.flopRateSimd * subCluster.numberOfNodes})</td>
                     </tr>
                     <tr>
                         <th scope="col">MemBw Rate</th>
-                        <td> {Math.floor(sumUp($mainQuery.data.nodeMetrics, subCluster.name, 'mem_bw') * 100) / 100} / {subCluster.memoryBandwidth * subCluster.numberOfNodes}</td>
+                        <td style="min-width: 75px;"><div class="col"><Progress value={memBwRate[subCluster.name]} max={subCluster.memoryBandwidth * subCluster.numberOfNodes}/></div></td>
+                        <td>({memBwRate[subCluster.name]} / {subCluster.memoryBandwidth * subCluster.numberOfNodes})</td>
                     </tr>
                 </Table>
             </Col>
