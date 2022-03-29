@@ -10,7 +10,7 @@
 
     export let cluster
 
-    let plotWidths = [], colWidth = 0
+    let plotWidths = [], colWidth1 = 0, colWidth2
 
     let from = new Date(Date.now() - 5 * 60 * 1000), to = new Date(Date.now())
     const mainQuery = operationStore(`query($cluster: String!, $filter: [JobFilter!]!, $metrics: [String!], $from: Time!, $to: Time!) {
@@ -25,6 +25,11 @@
                     series { data }
                 }
             }
+        }
+
+        stats: jobsStatistics(filter: $filter) {
+            histWalltime { count, value }
+            histNumNodes { count, value }
         }
 
         allocatedNodes(cluster: $cluster)                                                        { name, count }
@@ -111,26 +116,66 @@
                 </Table>
             </Col>
             <div class="col-9" bind:clientWidth={plotWidths[i]}>
-                <Roofline
-                    width={plotWidths[i] - 10} height={300} colorDots={false} cluster={subCluster}
-                    data={transformPerNodeData($mainQuery.data.nodeMetrics.filter(data => data.subCluster == subCluster.name))} />
+                {#key $mainQuery.data.nodeMetrics}
+                    <Roofline
+                        width={plotWidths[i] - 10} height={300} colorDots={false} cluster={subCluster}
+                        data={transformPerNodeData($mainQuery.data.nodeMetrics.filter(data => data.subCluster == subCluster.name))} />
+                {/key}
             </div>
         </Row>
     {/each}
     <Row>
-        <div class="col" bind:clientWidth={colWidth}>
+        <div class="col-4" bind:clientWidth={colWidth1}>
             <h4>Top Users</h4>
-            <Histogram
-                width={colWidth - 25} height={300 * 0.5}
-                data={$mainQuery.data.topUsers.sort((a, b) => b.count - a.count).map(({ count }, idx) => ({ count, value: idx }))}
-                label={(x) => x < $mainQuery.data.topUsers.length ? $mainQuery.data.topUsers[Math.floor(x)].name : '0'} />
+            {#key $mainQuery.data}
+                <Histogram
+                    width={colWidth1 - 25} height={300}
+                    data={$mainQuery.data.topUsers.sort((a, b) => b.count - a.count).map(({ count }, idx) => ({ count, value: idx }))}
+                    label={(x) => x < $mainQuery.data.topUsers.length ? $mainQuery.data.topUsers[Math.floor(x)].name : '0'} />
+            {/key}
+        </div>
+        <div class="col-2">
+            <Table>
+                <tr><th>Name</th><th>Number of Nodes</th></tr>
+                {#each $mainQuery.data.topUsers.sort((a, b) => b.count - a.count) as { name, count }}
+                    <tr><th scope="col">{name}</th><td>{count}</td></tr>
+                {/each}
+            </Table>
+        </div>
+        <div class="col-4">
+            <h4>Top Projects</h4>
+            {#key $mainQuery.data}
+                <Histogram
+                    width={colWidth1 - 25} height={300}
+                    data={$mainQuery.data.topProjects.sort((a, b) => b.count - a.count).map(({ count }, idx) => ({ count, value: idx }))}
+                    label={(x) => x < $mainQuery.data.topProjects.length ? $mainQuery.data.topProjects[Math.floor(x)].name : '0'} />
+            {/key}
+        </div>
+        <div class="col-2">
+            <Table>
+                <tr><th>Name</th><th>Number of Nodes</th></tr>
+                {#each $mainQuery.data.topUsers.sort((a, b) => b.count - a.count) as { name, count }}
+                    <tr><th scope="col">{name}</th><td>{count}</td></tr>
+                {/each}
+            </Table>
+        </div>
+    </Row>
+    <Row>
+        <div class="col" bind:clientWidth={colWidth2}>
+            <h4>Duration Distribution</h4>
+            {#key $mainQuery.data.stats}
+                <Histogram
+                    width={colWidth2 - 25} height={300}
+                    data={$mainQuery.data.stats[0].histWalltime} />
+            {/key}
         </div>
         <div class="col">
-            <h4>Top Projects</h4>
-            <Histogram
-                width={colWidth - 25} height={300 * 0.5}
-                data={$mainQuery.data.topProjects.sort((a, b) => b.count - a.count).map(({ count }, idx) => ({ count, value: idx }))}
-                label={(x) => x < $mainQuery.data.topProjects.length ? $mainQuery.data.topProjects[Math.floor(x)].name : '0'} />
+            <h4>Number of Nodes Distribution</h4>
+            {#key $mainQuery.data.stats}
+                <Histogram
+                    width={colWidth2 - 25} height={300}
+                    data={$mainQuery.data.stats[0].histNumNodes} />
+            {/key}
         </div>
     </Row>
 {/if}
