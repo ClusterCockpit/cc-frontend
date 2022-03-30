@@ -62,9 +62,9 @@
     <td>
         <JobInfo job={job}/>
     </td>
-    {#if job.monitoringStatus == 0}
+    {#if job.monitoringStatus == 0 || job.monitoringStatus == 2}
         <td colspan="{metrics.length}">
-            <Card body color="warning">Not monitored</Card>
+            <Card body color="warning">Not monitored or archiving failed</Card>
         </td>
     {:else if $metricsQuery.fetching}
         <td colspan="{metrics.length}" style="text-align: center;">
@@ -72,7 +72,11 @@
         </td>
     {:else if $metricsQuery.error}
         <td colspan="{metrics.length}">
-            <Card body color="danger" class="mb-3">{$metricsQuery.error.message}</Card>
+            <Card body color="danger" class="mb-3">
+                {$metricsQuery.error.message.length > 500
+                    ? $metricsQuery.error.message.substring(0, 499)+'...'
+                    : $metricsQuery.error.message}
+            </Card>
         </td>
     {:else}
         {#each sortAndSelectScope($metricsQuery.data.jobMetrics) as metric, i (metric || i)}
