@@ -73,6 +73,7 @@
         <Filters
             bind:this={filters}
             filterPresets={filterPresets}
+            startTimeQuickSelect={true}
             menuText="Only {type.toLowerCase()}s with jobs that match the filters will show up"
             on:update={({ detail }) => {
                 $stats.variables = { filter: detail.filters }

@@ -154,7 +154,7 @@
         <div class="col-2">
             <Table>
                 <tr><th>Name</th><th>Number of Nodes</th></tr>
-                {#each $mainQuery.data.topUsers.sort((a, b) => b.count - a.count) as { name, count }}
+                {#each $mainQuery.data.topProjects.sort((a, b) => b.count - a.count) as { name, count }}
                     <tr><th scope="col">{name}</th><td>{count}</td></tr>
                 {/each}
             </Table>

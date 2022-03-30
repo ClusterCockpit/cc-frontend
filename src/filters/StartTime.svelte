@@ -18,16 +18,6 @@
 
     reset()
 
-    getContext('on-init')(({ data }) => {
-        if (!data)
-            return
-
-        // TODO Use filterRanges?
-        let now = new Date(Date.now())
-        pendingFrom = { date: `${now.getFullYear() - 10}-01-01`, time: '00:00' }
-        pendingTo = { date: `${now.getFullYear() + 1}-01-01`, time: '00:00' }
-    })
-
     function toRFC3339({ date, time }, secs = 0) {
         const dparts = date.split('-')
         const tparts = time.split(':')
