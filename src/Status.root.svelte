@@ -28,7 +28,7 @@
         }
 
         stats: jobsStatistics(filter: $filter) {
-            histWalltime { count, value }
+            histDuration { count, value }
             histNumNodes { count, value }
         }
 
@@ -138,7 +138,10 @@
             <Table>
                 <tr><th>Name</th><th>Number of Nodes</th></tr>
                 {#each $mainQuery.data.topUsers.sort((a, b) => b.count - a.count) as { name, count }}
-                    <tr><th scope="col">{name}</th><td>{count}</td></tr>
+                    <tr>
+                        <th scope="col"><a href="/monitoring/user/{name}">{name}</a></th>
+                        <td>{count}</td>
+                    </tr>
                 {/each}
             </Table>
         </div>
@@ -166,7 +169,7 @@
             {#key $mainQuery.data.stats}
                 <Histogram
                     width={colWidth2 - 25} height={300}
-                    data={$mainQuery.data.stats[0].histWalltime} />
+                    data={$mainQuery.data.stats[0].histDuration} />
             {/key}
         </div>
         <div class="col">

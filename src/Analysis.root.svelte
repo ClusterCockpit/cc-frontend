@@ -57,7 +57,7 @@
                 shortJobs
                 totalWalltime
                 totalCoreHours
-                histWalltime { count, value }
+                histDuration { count, value }
                 histNumNodes { count, value }
             }
 
@@ -166,11 +166,11 @@
             </div>
         </div>
         <div class="col-3">
-            {#key $statsQuery.data.stats[0].histWalltime}
+            {#key $statsQuery.data.stats[0].histDuration}
                 <h4>Walltime Distribution</h4>
                 <Histogram
                     width={colWidth - 25} height={300}
-                    data={$statsQuery.data.stats[0].histWalltime} />
+                    data={$statsQuery.data.stats[0].histDuration} />
             {/key}
         </div>
         <div class="col-3">

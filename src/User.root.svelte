@@ -29,7 +29,7 @@
             shortJobs
             totalWalltime
             totalCoreHours
-            histWalltime { count, value }
+            histDuration { count, value }
             histNumNodes { count, value }
         }
     }
@@ -136,9 +136,9 @@
         </Col>
         <div class="col-4" style="text-align: center;" bind:clientWidth={w1}>
             <b>Walltime</b>
-            {#key $stats.data.jobsStatistics[0].histWalltime}
+            {#key $stats.data.jobsStatistics[0].histDuration}
                 <Histogram
-                    data={$stats.data.jobsStatistics[0].histWalltime}
+                    data={$stats.data.jobsStatistics[0].histDuration}
                     width={w1 - 25} height={histogramHeight} />
             {/key}
         </div>
