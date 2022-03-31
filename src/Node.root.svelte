@@ -4,7 +4,7 @@
     import { operationStore, query } from '@urql/svelte'
     import TimeSelection from './filters/TimeSelection.svelte'
     import PlotTable from './PlotTable.svelte'
-    import Metric from './Metric.svelte'
+    import MetricPlot from './plots/MetricPlot.svelte'
     import { getContext } from 'svelte'
 
     export let cluster
@@ -20,11 +20,11 @@
         from.setMinutes(from.getMinutes() - 30)
     }
 
-    const ccconfig = getContext('cc-config')
+    const ccconfig = getContext('cc-config'), clusters = getContext('clusters')
 
     const nodesQuery = operationStore(`query($cluster: String!, $nodes: [String!], $from: Time!, $to: Time!) {
         nodeMetrics(cluster: $cluster, nodes: $nodes, from: $from, to: $to) {
-            host,
+            host, subCluster
             metrics {
                 name,
                 metric {
@@ -48,17 +48,7 @@
 
     query(nodesQuery)
 
-    function groupByMetric(metrics) {
-        let grouped = new Map()
-        for (let metric of metrics) {
-            if (grouped.has(metric.name))
-                grouped.get(metric.name).push(metric.metric)
-            else
-                grouped.set(metric.name, [metric.metric])
-        }
-
-        return [...grouped.entries()].sort((a, b) => a[0].localeCompare(b[0]))
-    }
+    $: console.log($nodesQuery?.data?.nodeMetrics[0].metrics)
 </script>
 
 <Row>
@@ -92,15 +82,13 @@
                 let:item
                 let:width
                 itemsPerRow={ccconfig.plot_view_plotsPerRow}
-                items={groupByMetric($nodesQuery.data.nodeMetrics[0].metrics)}>
-                <Metric
-                    cluster={cluster}
-                    hosts={[hostname]}
-                    metric={item[0]}
-                    atAllScopes={item[1]}
-                    width={width} />
+                items={$nodesQuery.data.nodeMetrics[0].metrics.sort((a, b) => a.name.localeCompare(b.name))}>
+                <h4 style="text-align: center;">{item.name}</h4>
+                <MetricPlot
+                    width={width} height={300} metric={item.name} timestep={item.metric.timestep}
+                    cluster={clusters.find(c => c.name == cluster)} subCluster={$nodesQuery.data.nodeMetrics[0].subCluster}
+                    series={item.metric.series} />
             </PlotTable>
         {/if}
     </Col>
 </Row>
-
