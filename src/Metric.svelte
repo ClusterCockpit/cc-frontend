@@ -1,65 +1,85 @@
-<!-- 
-    @component
-    A single plot in the job view.
-
-    TODO:
-    - Allow selection of specific node
- -->
 <script>
-    import { getContext } from 'svelte';
-    import { InputGroup, InputGroupText } from 'sveltestrap'
+    import { getContext } from 'svelte'
     import Timeseries from './plots/MetricPlot.svelte'
-    import { maxScope, minScope } from './utils.js'
+    import { InputGroup, InputGroupText, Spinner, Card } from 'sveltestrap'
+    import { fetchMetrics } from './utils'
 
-    export let hosts
-    export let cluster
-    export let subCluster = null
+    export let job
     export let metric
-    export let atAllScopes
+    export let scopes
     export let width
-    export let height = 300
 
-    const metricConfig = getContext('metrics'),
-          clusters = getContext('clusters'),
-          avaliableScopes = [...new Set(atAllScopes.map(item => item.scope))]
+    const cluster = getContext('clusters').find(cluster => cluster.name == job.cluster)
+    const subCluster = cluster.subClusters.find(subCluster => subCluster.name == job.subCluster)
+    const metricConfig = cluster.metricConfig.find(metricConfig => metricConfig.name == metric)
 
-    let plot, host = null, selectedScope = hosts.length > 1 ? maxScope(avaliableScopes) : minScope(avaliableScopes)
-    $: data = atAllScopes.find(metric => metric.scope == selectedScope)
-    $: series = host == null ? data.series : data.series.filter(s => s.hostname == host)
+    let selectedScope = scopes[0].scope, selectedHost = null, plot, fetching = false, error = null
 
-    export function setTimeRange(from, to) {
-        if (plot != null)
-            plot.setTimeRange(from, to)
+    $: avaliableScopes = scopes.map(metric => metric.scope)
+    $: data = scopes.find(metric => metric.scope == selectedScope)
+    $: series = data?.series.filter(series => selectedHost == null || series.hostname == selectedHost)
+
+    let from = null, to = null
+    export function setTimeRange(f, t) {
+        from = f, to = t
     }
-</script>
 
+    $: if (plot != null) plot.setTimeRange(from, to)
+
+    export async function loadMore() {
+        fetching = true
+        let response = await fetchMetrics(job, [metric], ["core"])
+        fetching = false
+
+        if (response.error) {
+            error = response.error
+            return
+        }
+
+        for (let jm of response.data.jobMetrics) {
+            if (jm.metric.scope != "node") {
+                scopes.push(jm.metric)
+                selectedScope = jm.metric.scope
+                avaliableScopes = [...avaliableScopes, selectedScope]
+            }
+        }
+    }
+
+    $: if (selectedScope == "load-more") loadMore()
+</script>
 <InputGroup>
     <InputGroupText style="min-width: 150px;">
-        {metric} ({metricConfig(cluster, metric)?.unit})
+        {metric} ({metricConfig?.unit})
     </InputGroupText>
-    <select class="form-select" bind:value={selectedScope} disabled={avaliableScopes.length == 1}>
+    <select class="form-select" bind:value={selectedScope}>
         {#each avaliableScopes as scope}
             <option value={scope}>{scope}</option>
         {/each}
+        {#if avaliableScopes.length == 1 && metricConfig?.scope != "node"}
+            <option value={"load-more"}>Load more...</option>
+        {/if}
     </select>
-    {#if hosts.length > 1}
-        <select class="form-select" bind:value={host}>
+    {#if job.resources.length > 1}
+        <select class="form-select" bind:value={selectedHost}>
             <option value={null}>All Hosts</option>
-            {#each hosts as host}
-                <option value={host}>{host}</option>
+            {#each job.resources as { hostname }}
+                <option value={hostname}>{hostname}</option>
             {/each}
         </select>
     {/if}
 </InputGroup>
 {#key series}
-    <Timeseries
-        bind:this={plot}
-        useStatsSeries={false}
-        width={width} height={height}
-        cluster={clusters.find(c => c.name == cluster)} subCluster={subCluster}
-        timestep={data.timestep}
-        scope={data.scope} metric={metric}
-        series={series}
-        statisticsSeries={data.statisticsSeries} />
+    {#if fetching == true}
+        <Spinner/>
+    {:else if error != null}
+        <Card body color="danger">{error.message}</Card>
+    {:else if series != null}
+        <Timeseries
+            bind:this={plot}
+            width={width} height={300}
+            cluster={cluster} subCluster={subCluster}
+            timestep={data.timestep}
+            scope={selectedScope} metric={metric}
+            series={series} />
+    {/if}
 {/key}
-<br/>

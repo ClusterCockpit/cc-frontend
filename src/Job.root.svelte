@@ -29,7 +29,7 @@
     const ccconfig = getContext('cc-config'),
           clusters = getContext('clusters')
 
-    const jobMetrics = fetchMetricsStore({ id: dbid }, null, ["node", "core"]);
+    const jobMetrics = fetchMetricsStore({ id: dbid }, null, ["node"]); 
 
     let plots = {}
     let jobTags
@@ -87,6 +87,8 @@
     <Col>
         {#if $jobMetrics.error}
             <Card body color="danger">{$jobMetrics.error.message}</Card>
+        {:else if $jobMetrics.fetching}
+            <Spinner secondary/>
         {:else if $jobMetrics.data && $initq.data}
             <PlotTable
                 let:item
@@ -95,11 +97,9 @@
                 itemsPerRow={ccconfig.plot_view_plotsPerRow}>
                 <Metric
                     bind:this={plots[item[0].name]}
-                    hosts={$initq.data.job.resources.map(r => r.hostname)}
-                    cluster={$initq.data.job.cluster}
-                    subCluster={$initq.data.job.subCluster}
+                    job={$initq.data.job}
                     metric={item[0].name}
-                    atAllScopes={item.map(x => x.metric)}
+                    scopes={item.map(x => x.metric)}
                     width={width}/>
             </PlotTable>
         {/if}
