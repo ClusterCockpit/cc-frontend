@@ -1,6 +1,7 @@
 <script>
     import { init, groupByScope, fetchMetricsStore } from './utils.js'
-    import { Row, Col, Card, Spinner, TabContent, TabPane } from 'sveltestrap'
+    import { Row, Col, Card, Spinner, TabContent, TabPane,
+             CardBody, CardHeader, CardTitle } from 'sveltestrap'
     import PlotTable from './PlotTable.svelte'
     import Metric from './Metric.svelte'
     import PolarPlot from './plots/Polar.svelte'
@@ -34,6 +35,20 @@
     let plots = {}, jobTags, fullWidth, statsTable
     $: polarPlotSize = Math.min(fullWidth / 3 - 10, 300)
     $: document.title = $initq.fetching ? 'Loading...' : ($initq.error ? 'Error' : `Job ${$initq.data.job.jobId} - ClusterCockpit`)
+
+    let missingMetrics = [], missingHosts = [], somethingMissing = false
+    $: if ($initq.data && $jobMetrics.data) {
+        let job = $initq.data.job,
+            metrics = $jobMetrics.data.jobMetrics,
+            metricNames = clusters.find(c => c.name == job.cluster).metricConfig.map(mc => mc.name)
+
+        missingMetrics = metricNames.filter(metric => !metrics.some(jm => jm.name == metric))
+        missingHosts = job.resources.map(({ hostname }) => ({
+            hostname: hostname,
+            metrics: metricNames.filter(metric => !metrics.some(jm => jm.metric.scope == 'node' && jm.metric.series.some(series => series.hostname == hostname)))
+        })).filter(({ metrics }) => metrics.length > 0)
+        somethingMissing = missingMetrics.length > 0 || missingHosts.length > 0
+    }
 </script>
 
 <div class="row" bind:clientWidth={fullWidth}></div>
@@ -109,7 +124,29 @@
     <Col>
         {#if $initq.data}
         <TabContent>
-            <TabPane tabId="stats" tab="Statistics Table" active>
+            {#if somethingMissing}
+                <TabPane tabId="resources" tab="Resources" active={somethingMissing}>
+                    <div style="margin: 10px;"><Card color="warning">
+                        <CardHeader>
+                            <CardTitle>Missing Metrics/Reseources</CardTitle>
+                        </CardHeader>
+                        <CardBody>
+                            {#if missingMetrics.length > 0}
+                                <p>No data at all is available for the metrics: {missingMetrics.join(', ')}</p>
+                            {/if}
+                            {#if missingHosts.length > 0}
+                                <p>Some metrics are missing for the following hosts:</p>
+                                <ul>
+                                    {#each missingHosts as missing}
+                                        <li>{missing.hostname}: {missing.metrics.join(', ')}</li>
+                                    {/each}
+                                </ul>
+                            {/if}
+                        </CardBody>
+                    </Card></div>
+                </TabPane>
+            {/if}
+            <TabPane tabId="stats" tab="Statistics Table" active={!somethingMissing}>
                 {#if $jobMetrics.data}
                     <StatsTable bind:this={statsTable} job={$initq.data.job} jobMetrics={$jobMetrics.data.jobMetrics} />
                 {/if}
