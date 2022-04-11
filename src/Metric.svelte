@@ -1,5 +1,5 @@
 <script>
-    import { getContext } from 'svelte'
+    import { getContext, createEventDispatcher } from 'svelte'
     import Timeseries from './plots/MetricPlot.svelte'
     import { InputGroup, InputGroupText, Spinner, Card } from 'sveltestrap'
     import { fetchMetrics } from './utils'
@@ -9,6 +9,7 @@
     export let scopes
     export let width
 
+    const dispatch = createEventDispatcher()
     const cluster = getContext('clusters').find(cluster => cluster.name == job.cluster)
     const subCluster = cluster.subClusters.find(subCluster => subCluster.name == job.subCluster)
     const metricConfig = cluster.metricConfig.find(metricConfig => metricConfig.name == metric)
@@ -40,7 +41,9 @@
             if (jm.metric.scope != "node") {
                 scopes.push(jm.metric)
                 selectedScope = jm.metric.scope
-                avaliableScopes = [...avaliableScopes, selectedScope]
+                dispatch('more-loaded', jm)
+                if (!avaliableScopes.includes(selectedScope))
+                    avaliableScopes = [...avaliableScopes, selectedScope]
             }
         }
     }

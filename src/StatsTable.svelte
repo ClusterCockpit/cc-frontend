@@ -50,6 +50,10 @@
             return s.dir != 'up' ? s1[stat] - s2[stat] : s2[stat] - s1[stat]         
         })
     }
+
+    export function moreLoaded(jobMetric) {
+        jobMetrics = [...jobMetrics, jobMetric]
+    }
 </script>
 
 <Table>
@@ -68,8 +72,8 @@
                         </InputGroupText>
                         <select class="form-select"
                             bind:value={selectedScopes[metric]}
-                            disabled={scopesForMetric(metric).length == 1}>
-                            {#each scopesForMetric(metric) as scope}
+                            disabled={scopesForMetric(metric, jobMetrics).length == 1}>
+                            {#each scopesForMetric(metric, jobMetrics) as scope}
                                 <option value={scope}>{scope}</option>
                             {/each}
                         </select>

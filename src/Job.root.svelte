@@ -31,9 +31,7 @@
 
     const jobMetrics = fetchMetricsStore({ id: dbid }, null, ["node"]); 
 
-    let plots = {}
-    let jobTags
-    let fullWidth
+    let plots = {}, jobTags, fullWidth, statsTable
     $: polarPlotSize = Math.min(fullWidth / 3 - 10, 300)
     $: document.title = $initq.fetching ? 'Loading...' : ($initq.error ? 'Error' : `Job ${$initq.data.job.jobId} - ClusterCockpit`)
 </script>
@@ -97,6 +95,7 @@
                 itemsPerRow={ccconfig.plot_view_plotsPerRow}>
                 <Metric
                     bind:this={plots[item[0].name]}
+                    on:more-loaded={({ detail }) => statsTable.moreLoaded(detail)}
                     job={$initq.data.job}
                     metric={item[0].name}
                     scopes={item.map(x => x.metric)}
@@ -112,7 +111,7 @@
         <TabContent>
             <TabPane tabId="stats" tab="Statistics Table" active>
                 {#if $jobMetrics.data}
-                    <StatsTable job={$initq.data.job} jobMetrics={$jobMetrics.data.jobMetrics} />
+                    <StatsTable bind:this={statsTable} job={$initq.data.job} jobMetrics={$jobMetrics.data.jobMetrics} />
                 {/if}
             </TabPane>
             <TabPane tabId="job-script" tab="Job Script">
