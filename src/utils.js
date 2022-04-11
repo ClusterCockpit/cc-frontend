@@ -247,20 +247,16 @@ export async function fetchMetrics(job, metrics, scopes) {
     }
 }
 
-export function fetchMetricsStore(job, metrics, scopes) {
-    return readable({
-        fetching: true,
-        error: null,
-        data: null
-    }, (set) => {
-        fetchMetrics(job, metrics, scopes).then(res => {
-            set({
-                fetching: false,
-                error: res.error,
-                data: res.data
-            })
-        })
-    })
+export function fetchMetricsStore() {
+    let set = null
+    return [
+        readable({ fetching: true, error: null, data: null }, (_set) => { set = _set }),
+        (job, metrics, scopes) => fetchMetrics(job, metrics, scopes).then(res => set({
+            fetching: false,
+            error: res.error,
+            data: res.data
+        }))
+    ]
 }
 
 export function stickyHeader(datatableHeaderSelector, updatePading) {

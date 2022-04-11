@@ -2,7 +2,7 @@
     import { getContext, createEventDispatcher } from 'svelte'
     import Timeseries from './plots/MetricPlot.svelte'
     import { InputGroup, InputGroupText, Spinner, Card } from 'sveltestrap'
-    import { fetchMetrics } from './utils'
+    import { fetchMetrics, minScope } from './utils'
 
     export let job
     export let metric
@@ -14,7 +14,7 @@
     const subCluster = cluster.subClusters.find(subCluster => subCluster.name == job.subCluster)
     const metricConfig = cluster.metricConfig.find(metricConfig => metricConfig.name == metric)
 
-    let selectedScope = scopes[0].scope, selectedHost = null, plot, fetching = false, error = null
+    let selectedScope = minScope(scopes.map(s => s.scope)), selectedHost = null, plot, fetching = false, error = null
 
     $: avaliableScopes = scopes.map(metric => metric.scope)
     $: data = scopes.find(metric => metric.scope == selectedScope)

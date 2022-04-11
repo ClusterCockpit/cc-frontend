@@ -27,10 +27,11 @@
         }
     `)
 
+    const [jobMetrics, startFetching] = fetchMetricsStore()
+    getContext('on-init')(() => $initq.data.job ? startFetching($initq.data.job, null, $initq.data.job.resources.length > 2 ? ["node"] : ["node", "core"]) : null)
+
     const ccconfig = getContext('cc-config'),
           clusters = getContext('clusters')
-
-    const jobMetrics = fetchMetricsStore({ id: dbid }, null, ["node"]); 
 
     let plots = {}, jobTags, fullWidth, statsTable
     $: polarPlotSize = Math.min(fullWidth / 3 - 10, 300)
