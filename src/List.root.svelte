@@ -8,6 +8,7 @@
              InputGroup, Input } from 'sveltestrap'
     import Filters from './filters/Filters.svelte'
     import { operationStore, query } from '@urql/svelte';
+    import { scramble, scrambleNames } from './joblist/JobInfo.svelte'
 
     const { } = init()
 
@@ -129,7 +130,7 @@
                 <tr>
                     <td>
                         {#if type == 'USER'}
-                            <a href="/monitoring/user/{row.id}">{row.id}</a>
+                            <a href="/monitoring/user/{row.id}">{scrambleNames ? scramble(row.id) : row.id}</a>
                         {:else if type == 'PROJECT'}
                             <a href="/monitoring/jobs/?project={row.id}">{row.id}</a>
                         {:else}

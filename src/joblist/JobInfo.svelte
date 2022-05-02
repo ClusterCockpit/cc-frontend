@@ -5,7 +5,10 @@
     - job: GraphQL.Job
     - jobTags: Defaults to job.tags, usefull for dynamically updating the tags.
  -->
-
+<script context="module">
+    export const scrambleNames = window.localStorage.getItem("cc-scramble-names")
+    export const scramble = (str) => [...str].reduce((x, c, i) => x * 7 + c.charCodeAt(0) * i * 21, 5).toString(32)
+</script>
 <script>
     import Tag from '../Tag.svelte';
     import { Badge } from 'sveltestrap';
@@ -43,10 +46,10 @@
 
     <div class="fst-italic">
         <a href="/monitoring/user/{job.user}" target="_blank">
-            {job.user}
+            {scrambleNames ? scramble(job.user) : job.user}
         </a>
         {#if job.userData && job.userData.name}
-            ({job.userData.name})
+            ({scrambleNames ? scramble(job.userData.name) : job.userData.name})
         {/if}
     </div>
 

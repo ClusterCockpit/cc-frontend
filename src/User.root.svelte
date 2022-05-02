@@ -9,6 +9,7 @@
     import Refresher from './joblist/Refresher.svelte'
     import Histogram from './plots/Histogram.svelte'
     import MetricSelection from './MetricSelection.svelte'
+    import { scramble, scrambleNames } from './joblist/JobInfo.svelte'
 
     const { query: initq } = init()
 
@@ -101,12 +102,12 @@
                 <tbody>
                     <tr>
                         <th scope="row">Username</th>
-                        <td>{user.username}</td>
+                        <td>{scrambleNames ? scramble(user.username) : user.username}</td>
                     </tr>
                     {#if user.name}
                         <tr>
                             <th scope="row">Name</th>
-                            <td>{user.name}</td>
+                            <td>{scrambleNames ? scramble(user.name) : user.name}</td>
                         </tr>
                     {/if}
                     {#if user.email}
