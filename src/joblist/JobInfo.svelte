@@ -11,7 +11,7 @@
 </script>
 <script>
     import Tag from '../Tag.svelte';
-    import { Badge } from 'sveltestrap';
+    import { Badge, Icon } from 'sveltestrap';
 
     export let job;
     export let jobTags = job.tags;
@@ -27,55 +27,56 @@
 </script>
 
 <div>
-    <div class="fw-bold">
-        <a href="/monitoring/job/{job.id}" target="_blank">{job.jobId}</a>
-        ({job.cluster})
-    </div>
+    <p>
+        <span class="fw-bold"><a href="/monitoring/job/{job.id}" target="_blank">{job.jobId}</a> ({job.cluster})</span>
+        {#if job.metaData?.jobName}
+            <br/>
+            {job.metaData.jobName}
+        {/if}
+        {#if job.arrayJobId}
+            Array Job: <a href="/monitoring/jobs/?arrayJobId={job.arrayJobId}&cluster={job.cluster}" target="_blank">#{job.arrayJobId}</a>
+        {/if}
+    </p>
 
-    {#if job.metaData?.jobName}
-        <p>
-        {job.metaData.jobName}
-        <p>
-    {/if}
-
-    {#if job.arrayJobId}
-        <p>
-            Array Job <a href="/monitoring/jobs/?arrayJobId={job.arrayJobId}&cluster={job.cluster}" target="_blank">#{job.arrayJobId}</a>
-        </p>
-    {/if}
-
-    <div class="fst-italic">
-        <a href="/monitoring/user/{job.user}" target="_blank">
+    <p>
+        <Icon name="person-fill"/>
+        <a class="fst-italic" href="/monitoring/user/{job.user}" target="_blank">
             {scrambleNames ? scramble(job.user) : job.user}
         </a>
         {#if job.userData && job.userData.name}
             ({scrambleNames ? scramble(job.userData.name) : job.userData.name})
         {/if}
-    </div>
-
-    {#if job.project && job.project != 'no project'}
-        <p>{job.project}</p>
-    {/if}
-
-    <p>
-        {job.numNodes} node{job.numNodes == 1 ? '' : 's'}
-    </p>
-
-    <p>
-        Started at:
-        <span class="fw-bold">{(new Date(job.startTime)).toLocaleString()}</span>
-    </p>
-
-    <p>
-        Duration:
-        <span class="fw-bold">{formatDuration(job.duration)}</span>
-        {#if job.walltime}
-            (walltime: <span class="fw-bold">{formatDuration(job.walltime)}</span>)
+        {#if job.project && job.project != 'no project'}
+            <br/>
+            <Icon name="people-fill"/> {job.project}
         {/if}
+    </p>
+
+    <p>
+        {job.numNodes} <Icon name="pc-horizontal"/>
+        {#if job.exclusive != 1}
+            (shared)
+        {/if}
+        {#if job.numAcc > 0}
+            , {job.numAcc} <Icon name="gpu-card"/>
+        {/if}
+        {#if job.numHWThreads > 0}
+            , {job.numHWThreads} <Icon name="cpu"/>
+        {/if}
+    </p>
+
+    <p>
+        Start: <span class="fw-bold">{(new Date(job.startTime)).toLocaleString()}</span>
+        <br/>
+        Duration: <span class="fw-bold">{formatDuration(job.duration)}</span>
         {#if job.state == 'running'}
             <Badge color="success">running</Badge>
         {:else if job.state != 'completed'}
             <Badge color="danger">{job.state}</Badge>
+        {/if}
+        {#if job.walltime}
+            <br/>
+            Walltime: <span class="fw-bold">{formatDuration(job.walltime)}</span>
         {/if}
     </p>
 
