@@ -100,6 +100,10 @@
 <Row>
     <Col>
         {#if $jobMetrics.error}
+            {#if $initq.data.job.monitoringStatus == 0 || $initq.data.job.monitoringStatus == 2}
+                <Card body color="warning">Not monitored or archiving failed</Card>
+                <br/>
+            {/if}
             <Card body color="danger">{$jobMetrics.error.message}</Card>
         {:else if $jobMetrics.fetching}
             <Spinner secondary/>

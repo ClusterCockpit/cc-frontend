@@ -19,7 +19,7 @@
     export let job
     export let metrics
     export let plotWidth
-    export let plotHeight = 225
+    export let plotHeight = 275
 
     let scopes = [job.numNodes == 1 ? 'core' : 'node']
 

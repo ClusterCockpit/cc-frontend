@@ -49,7 +49,7 @@
     const lineWidth = clusterCockpitConfig.plot_general_lineWidth / window.devicePixelRatio
     const lineColors = clusterCockpitConfig.plot_general_colorscheme
     const backgroundColors = { normal:  'rgba(255, 255, 255, 1.0)', caution: 'rgba(255, 128, 0, 0.3)', alert: 'rgba(255, 0, 0, 0.3)' }
-    const thresholds = findThresholds(metricConfig, scope, cluster.subClusters.find(sc => sc.name == subCluster))
+    const thresholds = findThresholds(metricConfig, scope, typeof subCluster == 'string' ? cluster.subClusters.find(sc => sc.name == subCluster) : subCluster)
 
     function backgroundColor() {
         if (clusterCockpitConfig.plot_general_colorBackground == false
