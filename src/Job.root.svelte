@@ -1,13 +1,14 @@
 <script>
     import { init, groupByScope, fetchMetricsStore } from './utils.js'
     import { Row, Col, Card, Spinner, TabContent, TabPane,
-             CardBody, CardHeader, CardTitle } from 'sveltestrap'
+             CardBody, CardHeader, CardTitle, Button, Icon } from 'sveltestrap'
     import PlotTable from './PlotTable.svelte'
     import Metric from './Metric.svelte'
     import PolarPlot from './plots/Polar.svelte'
     import Roofline from './plots/Roofline.svelte'
     import JobInfo from './joblist/JobInfo.svelte'
     import TagManagement from './TagManagement.svelte'
+    import MetricSelection from './MetricSelection.svelte'
     import Zoom from './Zoom.svelte'
     import StatsTable from './StatsTable.svelte'
     import { getContext } from 'svelte'
@@ -27,11 +28,22 @@
         }
     `)
 
-    const [jobMetrics, startFetching] = fetchMetricsStore()
-    getContext('on-init')(() => $initq.data.job ? startFetching($initq.data.job, null, $initq.data.job.resources.length > 2 ? ["node"] : ["node", "core"]) : null)
-
     const ccconfig = getContext('cc-config'),
           clusters = getContext('clusters')
+
+    let isMetricsSelectionOpen = false, selectedMetrics = []
+    const [jobMetrics, startFetching] = fetchMetricsStore()
+    getContext('on-init')(() => {
+        let job = $initq.data.job
+        if (!job)
+            return
+
+        startFetching(job, null, job.numNodes > 2 ? ["node"] : ["node", "core"])
+
+        // TODO: Do not even fetch metrics that are not one of the following: flops_any, mem_bw, job_view_selectedMetrics, job_view_nodestats_selectedMetrics
+        selectedMetrics = ccconfig[`job_view_selectedMetrics:${job.cluster}`]
+            || clusters.find(c => c.name == job.cluster).metricConfig.map(mc => mc.name)
+    })
 
     let plots = {}, jobTags, fullWidth, statsTable
     $: polarPlotSize = Math.min(fullWidth / 3 - 10, 300)
@@ -50,6 +62,8 @@
         })).filter(({ metrics }) => metrics.length > 0)
         somethingMissing = missingMetrics.length > 0 || missingHosts.length > 0
     }
+
+    const orderAndMap = (grouped, selectedMetrics) => selectedMetrics.map(metric => ({ metric: metric, data: grouped.find((group) => group[0].name == metric) }))
 </script>
 
 <div class="row" bind:clientWidth={fullWidth}></div>
@@ -93,6 +107,14 @@
         {/if}
     </Col>
     <Col xs="auto">
+        {#if $initq.data}
+            <Button outline
+                on:click={() => (isMetricsSelectionOpen = true)}>
+                <Icon name="graph-up"/> Metrics
+            </Button>
+        {/if}
+    </Col>
+    <Col xs="auto">
         <Zoom timeseriesPlots={plots} />
     </Col>
 </Row>
@@ -111,15 +133,19 @@
             <PlotTable
                 let:item
                 let:width
-                items={groupByScope($jobMetrics.data.jobMetrics)}
+                items={orderAndMap(groupByScope($jobMetrics.data.jobMetrics), selectedMetrics)}
                 itemsPerRow={ccconfig.plot_view_plotsPerRow}>
-                <Metric
-                    bind:this={plots[item[0].name]}
-                    on:more-loaded={({ detail }) => statsTable.moreLoaded(detail)}
-                    job={$initq.data.job}
-                    metric={item[0].name}
-                    scopes={item.map(x => x.metric)}
-                    width={width}/>
+                {#if item.data}
+                    <Metric
+                        bind:this={plots[item.metric]}
+                        on:more-loaded={({ detail }) => statsTable.moreLoaded(detail)}
+                        job={$initq.data.job}
+                        metric={item.metric}
+                        scopes={item.data.map(x => x.metric)}
+                        width={width}/>
+                {:else}
+                    <Card body color="warning">No data for <code>{item.metric}</code></Card>
+                {/if}
             </PlotTable>
         {/if}
     </Col>
@@ -178,6 +204,14 @@
         {/if}
     </Col>
 </Row>
+
+{#if $initq.data}
+    <MetricSelection
+        cluster={$initq.data.job.cluster}
+        configName="job_view_selectedMetrics"
+        bind:metrics={selectedMetrics}
+        bind:isOpen={isMetricsSelectionOpen} />
+{/if}
 
 <style>
     .pre-wrapper {
