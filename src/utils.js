@@ -40,7 +40,8 @@ export function init(extraInitQuery = '') {
                 name, unit, peak,
                 normal, caution, alert,
                 timestep, scope,
-                aggregation
+                aggregation,
+                subClusters { name, peak, normal, caution, alert }
             }
             filterRanges {
                 duration  { from, to }

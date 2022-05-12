@@ -262,17 +262,19 @@
         if (!metricConfig || !scope || !subCluster)
             return null
 
-        // console.log({ metricConfig, scope, subCluster })
-
-        if (scope == 'node' || metricConfig.aggregation == 'avg')
-            return { normal: metricConfig.normal, caution: metricConfig.caution, alert: metricConfig.alert }
+        if (scope == 'node' || metricConfig.aggregation == 'avg') {
+            if (!metricConfig.subClusters)
+                return { normal: metricConfig.normal, caution: metricConfig.caution, alert: metricConfig.alert }
+            else
+                return metricConfig.subClusters.find(sc => sc.name == subCluster.name)
+        }
 
         if (metricConfig.aggregation != 'sum') {
             console.warn('Missing or unkown aggregation mode (sum/avg) for metric:', metricConfig)
             return null
         }
 
-        let divisor = 0
+        let divisor = 1
         if (scope == 'socket')
             divisor = subCluster.topology.socket.length
         else if (scope == 'core')
@@ -286,10 +288,11 @@
             return null
         }
 
+        let mc = metricConfig?.subClusters?.find(sc => sc.name == subCluster.name) || metricConfig
         return {
-            normal: metricConfig.normal / divisor,
-            caution: metricConfig.caution / divisor,
-            alert: metricConfig.alert / divisor
+            normal: mc.normal / divisor,
+            caution: mc.caution / divisor,
+            alert: mc.alert / divisor
         }
     }
 
